@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: villa-matcher
+Version: 0.1.0
+Summary: Villa availability matcher with multi-snapshot occupancy detection
+Requires-Python: >=3.10
+Requires-Dist: pandas>=2.0
+Requires-Dist: openpyxl>=3.0
+Requires-Dist: typer>=0.9
+Requires-Dist: rich>=13.0
+Requires-Dist: readchar>=4.0
+Requires-Dist: fastapi>=0.100
+Requires-Dist: uvicorn>=0.23
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"

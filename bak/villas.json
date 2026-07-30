@@ -1,0 +1,352 @@
+{
+  "Au Soleil": {
+    "capacity": 10,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ausoleil",
+    "solmar_url": ""
+  },
+  "Bank One": {
+    "capacity": 8,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/bank-villa-1",
+    "solmar_url": ""
+  },
+  "Bank Two": {
+    "capacity": 8,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/bank-villa-2",
+    "solmar_url": ""
+  },
+  "Beverley Hills": {
+    "capacity": 12,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-beverley-hills",
+    "solmar_url": ""
+  },
+  "Cornelia": {
+    "capacity": 10,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-cornelia",
+    "solmar_url": ""
+  },
+  "Elia Sun": {
+    "capacity": 10,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-elia",
+    "solmar_url": ""
+  },
+  "Escala Views": {
+    "capacity": 12,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-escala",
+    "solmar_url": ""
+  },
+  "Good Vibes One": {
+    "capacity": 2,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-good-vibes-1",
+    "solmar_url": ""
+  },
+  "Good Vibes Two": {
+    "capacity": 2,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-good-vibes-2",
+    "solmar_url": ""
+  },
+  "Hazal": {
+    "capacity": 6,
+    "locations": ["Fethiye"],
+    "area": "Ölüdeniz",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-hazan",
+    "solmar_url": ""
+  },
+  "Julia": {
+    "capacity": 12,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-julia",
+    "solmar_url": ""
+  },
+  "Maiden Asra": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-saffet-maidan-a",
+    "solmar_url": ""
+  },
+  "Maiden Burcu": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-safran-maidan-b",
+    "solmar_url": ""
+  },
+  "Mara Sun": {
+    "capacity": 10,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-mara",
+    "solmar_url": ""
+  },
+  "Marni": {
+    "capacity": 12,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-marni",
+    "solmar_url": ""
+  },
+  "Max View": {
+    "capacity": 12,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-max-view",
+    "solmar_url": ""
+  },
+  "Morey": {
+    "capacity": 8,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-more",
+    "solmar_url": ""
+  },
+  "Olivella": {
+    "capacity": 10,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-olivella",
+    "solmar_url": ""
+  },
+  "Olivia": {
+    "capacity": 8,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-olivia",
+    "solmar_url": ""
+  },
+  "Ophelia Bir": {
+    "capacity": 8,
+    "locations": ["Fethiye"],
+    "area": "Ölüdeniz",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ofelya",
+    "solmar_url": ""
+  },
+  "Ophelia Dort": {
+    "capacity": 6,
+    "locations": ["Fethiye"],
+    "area": "Ölüdeniz",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ofelya-4",
+    "solmar_url": ""
+  },
+  "Ophelia Iki": {
+    "capacity": 8,
+    "locations": ["Fethiye"],
+    "area": "Ölüdeniz",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ofelya-2",
+    "solmar_url": ""
+  },
+  "Ophelia Trio": {
+    "capacity": 6,
+    "locations": ["Fethiye"],
+    "area": "Ölüdeniz",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ofelya-3",
+    "solmar_url": ""
+  },
+  "Overseas Views": {
+    "capacity": 12,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-overseas",
+    "solmar_url": ""
+  },
+  "Resital": {
+    "capacity": 8,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-resital",
+    "solmar_url": ""
+  },
+  "Samira Four": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ozun-4",
+    "solmar_url": ""
+  },
+  "Samira One": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ozun-1",
+    "solmar_url": ""
+  },
+  "Samira Three": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ozun-3",
+    "solmar_url": ""
+  },
+  "Samira Two": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-ozun-2",
+    "solmar_url": ""
+  },
+  "Tanyeli 1": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-tanyeli",
+    "solmar_url": ""
+  },
+  "Tanyeli 2": {
+    "capacity": 6,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-tanyeli-2",
+    "solmar_url": ""
+  },
+  "Tigra": {
+    "capacity": 8,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-tigra",
+    "solmar_url": ""
+  },
+  "Tzia": {
+    "capacity": 10,
+    "locations": ["Kalkan"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-tzia",
+    "solmar_url": ""
+  },
+  "Villa Sudem": {
+    "capacity": 4,
+    "locations": ["Kalkan", "Kördere"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-sude",
+    "solmar_url": ""
+  },
+  "Villa Eslem": {
+    "capacity": 9,
+    "locations": ["Kalkan", "Kördere"],
+    "area": "",
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "attributes": [],
+    "resital_url": "https://www.resitalvilla.com/villalar/villa-eslem",
+    "solmar_url": ""
+  }
+}

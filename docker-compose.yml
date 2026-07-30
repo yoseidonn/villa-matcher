@@ -1,0 +1,15 @@
+services:
+  villa-matcher:
+    build: .
+    container_name: villa-matcher
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount the snapshots directory from the host
+      - /home/yusuf/Masaüstü/Resital\ Villa\ Scripts/inputs/all_reservations:/app/data/all_reservations:ro
+      # Mount villa metadata and tags
+      - ./data/villas.json:/app/data/villas.json
+      - ./data/tags.json:/app/data/tags.json
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Istanbul

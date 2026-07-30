@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "villa-matcher"
+version = "0.1.0"
+description = "Villa availability matcher with multi-snapshot occupancy detection"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    "openpyxl>=3.0",
+    "typer>=0.9",
+    "rich>=13.0",
+    "readchar>=4.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.23",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+villa-matcher = "villa_matcher.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]

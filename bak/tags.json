@@ -1,0 +1,36 @@
+{
+  "locations": [
+    "Kalkan",
+    "Kördere",
+    "İslamlar",
+    "Üzümlü",
+    "Kaş",
+    "Dalyan",
+    "Akbel",
+    "Bezirgan",
+    "Gökçeören",
+    "Kınık",
+    "Yeşilköy",
+    "Çavdır",
+    "Fethiye"
+  ],
+  "attributes": [
+    "pool",
+    "sea_view",
+    "conservative",
+    "honeymoon",
+    "heated_pool",
+    "jacuzzi",
+    "wifi",
+    "air_conditioning",
+    "parking",
+    "garden",
+    "bbq",
+    "washing_machine",
+    "dishwasher",
+    "sauna",
+    "gym",
+    "disabled_access",
+    "pet_friendly"
+  ]
+}

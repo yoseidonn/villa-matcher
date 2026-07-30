@@ -1,0 +1,2 @@
+[console_scripts]
+villa-matcher = villa_matcher.cli:app

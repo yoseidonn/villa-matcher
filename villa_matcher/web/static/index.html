@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Villa Matcher — Resital Villa</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f172a; --surface: #1e293b; --border: #334155;
+  --text: #e2e8f0; --text-dim: #94a3b8; --text-muted: #64748b;
+  --accent: #38bdf8; --green: #4ade80; --yellow: #fbbf24;
+  --red: #f87171; --orange: #fb923c; --purple: #a78bfa;
+  --radius: 8px; --radius-lg: 12px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+body {
+  font-family: var(--font); background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.app { display: flex; height: 100vh; }
+.sidebar {
+  width: 320px; min-width: 320px; background: var(--surface);
+  border-right: 1px solid var(--border); display: flex;
+  flex-direction: column; overflow: hidden;
+}
+.main { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+/* ── Header ──────────────────────────────────────────────────── */
+.header {
+  padding: 20px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+.header h1 { font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+.header .subtitle { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+
+/* ── Bottom Nav (Mobile) ─────────────────────────────────────── */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 6px 8px calc(6px + var(--safe-bottom));
+  justify-content: space-around; gap: 4px;
+}
+.bottom-nav button {
+  flex: 1; padding: 8px 4px; background: transparent; border: none;
+  color: var(--text-dim); font-size: 0.65rem; font-family: var(--font);
+  cursor: pointer; border-radius: var(--radius); transition: all 0.15s;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-nav button .nav-icon { font-size: 1.2rem; }
+.bottom-nav button.active { color: var(--accent); background: rgba(56,189,248,0.1); }
+
+/* ── Tab Navigation (Sidebar) ────────────────────────────────── */
+.sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.sidebar-tabs button {
+  flex: 1; padding: 10px 8px; background: transparent; border: none;
+  color: var(--text-dim); font-size: 0.72rem; font-family: var(--font);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.sidebar-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Search Form ─────────────────────────────────────────────── */
+.search-form {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.search-form label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+.search-form .row { display: flex; gap: 8px; }
+.search-form input, .search-form select {
+  flex: 1; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-size: 0.85rem; font-family: var(--font);
+  outline: none; transition: border-color 0.2s; min-width: 0;
+}
+.search-form input:focus, .search-form select:focus { border-color: var(--accent); }
+.search-form button {
+  padding: 12px; background: var(--accent); color: #0f172a; border: none;
+  border-radius: var(--radius); font-weight: 700; font-size: 0.9rem;
+  cursor: pointer; transition: all 0.2s; font-family: var(--font);
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.search-form button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.search-form button.secondary {
+  background: transparent; color: var(--accent); border: 1px solid var(--accent);
+}
+.check-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-dim); }
+
+/* ── Stats Bar ───────────────────────────────────────────────── */
+.stats-bar {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.stat-card {
+  flex: 1; min-width: 90px; padding: 14px 16px; background: var(--surface);
+  border-radius: var(--radius); border: 1px solid var(--border);
+  text-align: center;
+}
+.stat-card .num { font-size: 1.6rem; font-weight: 700; }
+.stat-card .label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card.green .num { color: var(--green); }
+.stat-card.yellow .num { color: var(--yellow); }
+.stat-card.red .num { color: var(--red); }
+.stat-card.accent .num { color: var(--accent); }
+
+/* ── Results ─────────────────────────────────────────────────── */
+.results-section { display: flex; flex-direction: column; gap: 16px; }
+.section-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.section-title .badge {
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 99px;
+  background: var(--accent); color: #0f172a; font-weight: 700;
+}
+.villa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.villa-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; transition: all 0.2s;
+}
+.villa-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+.villa-card h3 { font-size: 1rem; color: var(--accent); margin-bottom: 6px; }
+.villa-card .meta { font-size: 0.75rem; color: var(--text-dim); display: flex; gap: 12px; flex-wrap: wrap; }
+.villa-card .meta span { display: flex; align-items: center; gap: 4px; }
+.villa-card .reason { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; }
+.villa-card .tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+.villa-card .tag {
+  font-size: 0.65rem; padding: 2px 8px; border-radius: 99px;
+  background: rgba(56,189,248,0.1); color: var(--accent); border: 1px solid rgba(56,189,248,0.2);
+}
+
+.villa-card.flagged { border-color: var(--yellow); }
+.villa-card.unavailable { opacity: 0.5; border-color: var(--border); }
+.villa-card.unavailable:hover { border-color: var(--red); }
+
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; flex-shrink: 0; }
+.status-dot.green { background: var(--green); }
+.status-dot.yellow { background: var(--yellow); }
+.status-dot.red { background: var(--red); }
+.status-dot.purple { background: var(--purple); }
+
+/* ── Sequence Results ────────────────────────────────────────── */
+.sequence-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px;
+}
+.sequence-item .score { font-size: 0.7rem; color: var(--text-muted); }
+.sequence-path { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.sequence-segment {
+  padding: 8px 12px; background: var(--bg); border-radius: var(--radius);
+  border: 1px solid var(--border); text-align: center;
+}
+.sequence-segment .vname { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+.sequence-segment .dates { font-size: 0.7rem; color: var(--text-dim); }
+.sequence-arrow { color: var(--accent); font-size: 1.2rem; }
+
+/* ── Calendar ────────────────────────────────────────────────── */
+.calendar-container { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; }
+.calendar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border); gap: 6px;
+  flex-wrap: wrap;
+}
+.calendar-header h2 { font-size: 1.1rem; color: var(--accent); }
+.calendar-header .nav-btns { display: flex; gap: 4px; }
+.calendar-header button {
+  padding: 8px 14px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); cursor: pointer;
+  font-family: var(--font); font-size: 0.85rem; touch-action: manipulation;
+}
+.calendar-header button:hover { border-color: var(--accent); }
+.calendar-header select, .calendar-header input {
+  padding: 8px 10px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 0.8rem;
+}
+.calendar-grid { padding: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.calendar-grid table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 600px; }
+.calendar-grid th {
+  font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 6px 2px; text-align: center;
+  border-bottom: 2px solid var(--border); font-weight: 600;
+}
+.calendar-grid td {
+  height: 52px; text-align: center; vertical-align: top;
+  font-size: 0.72rem; padding: 3px 2px; border: 1px solid rgba(51,65,85,0.3);
+  cursor: pointer; transition: all 0.15s; position: relative;
+  overflow: hidden;
+}
+.calendar-grid td:hover { background-blend-mode: overlay; z-index: 2; }
+.calendar-grid td.padding { color: var(--text-muted); cursor: default; opacity: 0.3; }
+.calendar-grid td.today { box-shadow: inset 0 0 0 2px var(--accent); font-weight: 700; }
+.calendar-grid td.past { opacity: 0.45; }
+.calendar-grid td.confirmed { background: rgba(74,222,128,0.3); color: var(--green); }
+.calendar-grid td.likely_active { background: rgba(251,191,36,0.25); color: var(--yellow); }
+.calendar-grid td.ambiguous { background: rgba(248,113,113,0.25); color: var(--red); }
+.calendar-grid td.free { color: var(--text-dim); }
+.calendar-grid td.confirmed.arrival { background: linear-gradient(to right, transparent 45%, rgba(74,222,128,0.4) 45%); }
+.calendar-grid td.likely_active.arrival { background: linear-gradient(to right, transparent 45%, rgba(251,191,36,0.35) 45%); }
+.calendar-grid td.ambiguous.arrival { background: linear-gradient(to right, transparent 45%, rgba(248,113,113,0.35) 45%); }
+.calendar-grid td.confirmed.departure { background: linear-gradient(to right, rgba(74,222,128,0.4) 55%, transparent 55%); }
+.calendar-grid td.likely_active.departure { background: linear-gradient(to right, rgba(251,191,36,0.35) 55%, transparent 55%); }
+.calendar-grid td.ambiguous.departure { background: linear-gradient(to right, rgba(248,113,113,0.35) 55%, transparent 55%); }
+.calendar-grid td.turnover {
+  background: linear-gradient(to right,
+    var(--t-out-color, rgba(251,191,36,0.4)) 50%,
+    var(--t-in-color, rgba(74,222,128,0.4)) 50%);
+}
+.calendar-grid td.turnover::after {
+  content: ''; position: absolute; top: 0; left: 50%;
+  width: 1px; height: 100%; background: rgba(255,255,255,0.3);
+  pointer-events: none;
+}
+.calendar-grid .day-num { font-weight: 600; font-size: 0.8rem; line-height: 1.2; position: relative; z-index: 1; }
+.calendar-grid .passenger {
+  font-size: 0.58rem; color: inherit; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  opacity: 0.85; line-height: 1.1; margin-top: 1px; position: relative; z-index: 1;
+}
+
+/* ── Durum View ───────────────────────────────────────────────── */
+.durum-hero {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
+}
+.durum-hero-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px; text-align: center;
+}
+.durum-hero-card .big-num { font-size: 2.8rem; font-weight: 800; line-height: 1; }
+.durum-hero-card .big-label { font-size: 0.8rem; color: var(--text-dim); margin-top: 6px; }
+.durum-hero-card.avail .big-num { color: var(--green); }
+.durum-hero-card.occ .big-num { color: var(--red); }
+
+.durum-list { display: flex; flex-direction: column; gap: 6px; }
+.durum-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); transition: all 0.15s; cursor: pointer;
+  text-decoration: none; color: inherit;
+}
+.durum-row:hover { border-color: var(--accent); }
+.durum-row .dr-name { font-weight: 600; font-size: 0.9rem; min-width: 120px; }
+.durum-row .dr-name small { font-weight: 400; color: var(--text-dim); font-size: 0.7rem; }
+.durum-row .dr-dates { font-size: 0.78rem; color: var(--text-dim); flex: 1; text-align: right; }
+.durum-row .dr-dates strong { color: var(--text); }
+.durum-row.available { border-left: 3px solid var(--green); }
+.durum-row.occupied { border-left: 3px solid var(--red); }
+.durum-row .dr-link {
+  font-size: 0.65rem; color: var(--accent); text-decoration: none;
+  white-space: nowrap; opacity: 0.7;
+}
+.durum-row .dr-link:hover { opacity: 1; }
+.durum-row .dr-guest { font-size: 0.7rem; color: var(--text-muted); }
+
+/* ── Villa List ──────────────────────────────────────────────── */
+.villa-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+.villa-list-item {
+  padding: 8px 20px; cursor: pointer; font-size: 0.78rem;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  transition: all 0.15s; border-left: 3px solid transparent;
+  gap: 8px; -webkit-tap-highlight-color: transparent;
+}
+.villa-list-item:hover { background: rgba(56,189,248,0.05); }
+.villa-list-item.active { background: rgba(56,189,248,0.1); border-left-color: var(--accent); color: var(--accent); }
+.villa-list-item .vl-info { flex: 1; min-width: 0; line-height: 1.35; }
+.villa-list-item .vl-name { font-weight: 600; color: var(--text); }
+.villa-list-item.active .vl-name { color: var(--accent); }
+.villa-list-item .vl-meta { font-size: 0.65rem; color: var(--text-muted); display: flex; gap: 6px; flex-wrap: wrap; margin-top: 1px; }
+.villa-list-item .vl-link { font-size: 0.6rem; color: var(--accent); text-decoration: none; white-space: nowrap; opacity: 0.7; }
+.villa-list-item .vl-link:hover { opacity: 1; }
+.villa-list-item .occ-dots { display: flex; gap: 2px; align-self: center; flex-shrink: 0; }
+.villa-list-item .occ-dot { width: 6px; height: 6px; border-radius: 50%; }
+.villa-list-item .occ-dot.c { background: var(--green); }
+.villa-list-item .occ-dot.l { background: var(--yellow); }
+.villa-list-item .occ-dot.a { background: var(--red); }
+
+/* ── Legend ──────────────────────────────────────────────────── */
+.legend { padding: 12px 20px; border-top: 1px solid var(--border); }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 4px; }
+.legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+.legend-item .swatch-c { background: rgba(74,222,128,0.4); border: 1px solid var(--green); }
+.legend-item .swatch-l { background: rgba(251,191,36,0.3); border: 1px solid var(--yellow); }
+.legend-item .swatch-a { background: rgba(248,113,113,0.3); border: 1px solid var(--red); }
+.legend-item .swatch-f { background: transparent; border: 1px solid var(--border); }
+
+/* ── Tooltip ─────────────────────────────────────────────────── */
+.tooltip {
+  position: fixed; background: #1e293b; border: 1px solid var(--accent);
+  border-radius: var(--radius); padding: 10px 14px; font-size: 0.75rem;
+  z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-width: 300px;
+  line-height: 1.4;
+}
+.tooltip.visible { opacity: 1; pointer-events: auto; }
+
+/* ── Multi-Select ────────────────────────────────────────────── */
+.multi-select { position: relative; flex: 1; }
+.multi-select-btn {
+  width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-size: 0.85rem; font-family: var(--font);
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; transition: border-color 0.2s; text-align: left;
+}
+.multi-select-btn:hover, .multi-select-btn.open { border-color: var(--accent); }
+.multi-select-btn .arrow { font-size: 0.7rem; color: var(--text-dim); transition: transform 0.2s; }
+.multi-select-btn.open .arrow { transform: rotate(180deg); }
+.multi-select-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 999;
+  background: var(--surface); border: 1px solid var(--accent);
+  border-radius: var(--radius); margin-top: 4px; max-height: 240px;
+  overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.multi-select-dropdown label {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  font-size: 0.8rem; cursor: pointer; transition: background 0.1s;
+  text-transform: none; letter-spacing: 0;
+}
+.multi-select-dropdown label:hover { background: rgba(56,189,248,0.08); }
+.multi-select-dropdown input[type="checkbox"] {
+  accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer;
+}
+.multi-select-dropdown .select-all-row {
+  border-bottom: 1px solid var(--border); font-weight: 600; color: var(--accent);
+}
+
+/* ── Manual Reservation Form ─────────────────────────────────── */
+.manual-res-section { border-bottom: 1px solid var(--border); }
+.manual-res-toggle {
+  width: 100%; padding: 12px 20px; background: transparent; border: none;
+  color: var(--text-dim); font-size: 0.8rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font); transition: background 0.15s;
+}
+.manual-res-toggle:hover { background: rgba(56,189,248,0.05); }
+.manual-res-toggle .arrow { font-size: 0.7rem; transition: transform 0.2s; }
+.manual-res-toggle.open .arrow { transform: rotate(90deg); }
+.manual-res-body { padding: 0 20px 12px; }
+.manual-res-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 0; font-size: 0.7rem; color: var(--text-dim);
+  border-bottom: 1px solid rgba(51,65,85,0.3);
+}
+.manual-res-item .mr-villa { color: var(--accent); font-weight: 600; }
+.manual-res-item .mr-dates { color: var(--text-muted); }
+.manual-res-item .mr-del {
+  color: var(--red); cursor: pointer; font-size: 1rem; padding: 4px 6px;
+  opacity: 0.6; transition: opacity 0.15s;
+}
+.manual-res-item .mr-del:hover { opacity: 1; }
+
+/* ── Extras Tags ─────────────────────────────────────────────── */
+.tag.extras {
+  background: rgba(251,146,60,0.12); color: var(--orange);
+  border: 1px solid rgba(251,146,60,0.25);
+}
+
+/* ── Responsive: Tablet ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  .app { flex-direction: column; }
+  .sidebar { width: 100%; min-width: 0; max-height: 45vh; flex-shrink: 0; }
+  .main { padding: 12px; padding-bottom: calc(12px + var(--safe-bottom) + 60px); }
+  .villa-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .calendar-grid table { min-width: 100%; font-size: 0.65rem; }
+  .calendar-grid td { height: 38px; padding: 1px; }
+  .calendar-grid .passenger { font-size: 0.5rem; }
+  .stats-bar { gap: 6px; }
+  .stat-card { padding: 10px 12px; }
+  .stat-card .num { font-size: 1.2rem; }
+  .durum-hero { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+  .durum-hero-card .big-num { font-size: 2rem; }
+  .durum-row { flex-wrap: wrap; }
+  .durum-row .dr-name { min-width: 100px; }
+  .bottom-nav { display: flex; }
+}
+
+/* ── Responsive: Mobile ───────────────────────────────────────── */
+@media (max-width: 500px) {
+  .sidebar { max-height: 42vh; }
+  .main { padding: 10px; padding-bottom: calc(10px + var(--safe-bottom) + 60px); }
+  .header { padding: 14px 16px; }
+  .header h1 { font-size: 1.1rem; }
+  .search-form { padding: 12px 16px; gap: 8px; }
+  .calendar-header { padding: 10px 12px; }
+  .calendar-header h2 { font-size: 0.85rem; width: 100%; }
+  .calendar-header button { padding: 6px 10px; font-size: 0.8rem; }
+  .calendar-header select, .calendar-header input { padding: 6px 8px; font-size: 0.75rem; }
+  .calendar-grid td { height: 32px; font-size: 0.6rem; }
+  .search-form .row { flex-wrap: wrap; }
+  .search-form input, .search-form select { font-size: 0.8rem; padding: 8px 10px; }
+  #persons { max-width: 80px; }
+  .villa-grid { grid-template-columns: 1fr; gap: 8px; }
+  .villa-card { padding: 12px; }
+  .stat-card { min-width: 70px; padding: 8px; }
+  .stat-card .num { font-size: 1rem; }
+  .durum-hero { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .durum-hero-card { padding: 14px; }
+  .durum-hero-card .big-num { font-size: 1.6rem; }
+  .durum-row { padding: 8px 10px; font-size: 0.75rem; }
+  .durum-row .dr-name { min-width: 80px; font-size: 0.8rem; }
+  .durum-row .dr-dates { font-size: 0.7rem; }
+  .sidebar-tabs button { font-size: 0.65rem; padding: 8px 4px; }
+  .bottom-nav button { font-size: 0.6rem; padding: 6px 2px; }
+  .bottom-nav button .nav-icon { font-size: 1.1rem; }
+  .manual-res-toggle { padding: 10px 16px; font-size: 0.75rem; }
+  .multi-select-btn { font-size: 0.8rem; padding: 8px 10px; }
+  .multi-select-dropdown label { padding: 8px 10px; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="header">
+      <h1>🏠 Villa Matcher</h1>
+      <div class="subtitle">Multi-snapshot occupancy engine</div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="sidebar-tabs">
+      <button class="active" data-tab="search" onclick="switchTab('search')">🔍 Search</button>
+      <button data-tab="durum" onclick="switchTab('durum')">📊 Durum</button>
+      <button data-tab="calendar" onclick="switchTab('calendar')">📅 Calendar</button>
+    </div>
+
+    <!-- Search Tab Content -->
+    <div class="tab-content" id="tab-search">
+      <form class="search-form" id="searchForm">
+        <label>🔍 Find Available Villas</label>
+        <div class="row">
+          <input type="date" id="checkIn" required>
+          <input type="date" id="checkOut" required>
+        </div>
+        <div class="row">
+          <input type="number" id="persons" placeholder="Persons" min="0" value="2" style="max-width:90px">
+          <div class="multi-select" id="locationMultiSelect">
+            <button type="button" class="multi-select-btn" id="locationBtn" onclick="toggleLocationDropdown()">
+              <span id="locationBtnText">All Locations</span>
+              <span class="arrow">▾</span>
+            </button>
+            <div class="multi-select-dropdown" id="locationDropdown" style="display:none"></div>
+          </div>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="allowSequences">
+          <label for="allowSequences" style="text-transform:none;letter-spacing:0;font-size:0.8rem;">Multi-villa sequences</label>
+        </div>
+        <button type="submit">Search Availability</button>
+      </form>
+
+      <!-- Manual Reservation Form -->
+      <div class="manual-res-section" id="manualResSection">
+        <button type="button" class="manual-res-toggle" onclick="toggleManualResForm()">
+          <span>📝 Manual Reservations</span>
+          <span class="arrow" id="manualResArrow">▸</span>
+        </button>
+        <div class="manual-res-body" id="manualResBody" style="display:none">
+          <select id="mrVilla" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.8rem;margin-bottom:6px"></select>
+          <div class="row" style="gap:6px;margin-bottom:6px">
+            <input type="date" id="mrStart" placeholder="Start" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.75rem">
+            <input type="date" id="mrEnd" placeholder="End" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.75rem">
+          </div>
+          <input type="text" id="mrPassenger" placeholder="Passenger name" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.8rem;margin-bottom:6px">
+          <input type="text" id="mrExtras" placeholder="Extras (comma-separated)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.8rem;margin-bottom:6px">
+          <button type="button" onclick="addManualReservation()" style="width:100%;padding:10px;background:var(--accent);color:#0f172a;border:none;border-radius:var(--radius);font-weight:700;cursor:pointer;font-family:var(--font)">Add Reservation</button>
+          <div id="mrStatus" style="font-size:0.7rem;margin-top:6px"></div>
+          <div class="manual-res-list" id="manualResList" style="margin-top:8px;max-height:200px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Durum Tab Content - Shows in sidebar on desktop, main on mobile -->
+    <div class="tab-content" id="tab-durum" style="display:none">
+      <div style="padding:16px;text-align:center">
+        <button onclick="showDurumInMain()" style="padding:10px 20px;background:var(--accent);color:#0f172a;border:none;border-radius:var(--radius);font-weight:700;cursor:pointer;font-family:var(--font);font-size:0.85rem">📊 View Full Status Overview →</button>
+      </div>
+    </div>
+
+    <div class="villa-list" id="villaList">Loading villas...</div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch swatch-c"></span> Confirmed booking</div>
+      <div class="legend-item"><span class="legend-swatch swatch-l"></span> Likely active (guest there)</div>
+      <div class="legend-item"><span class="legend-swatch swatch-a"></span> Ambiguous (needs review)</div>
+      <div class="legend-item"><span class="legend-swatch swatch-f"></span> Free / Available</div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ────────────────────────────────────────── -->
+  <main class="main" id="mainContent">
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar"></div>
+
+    <!-- Calendar View -->
+    <div class="calendar-container" id="calendarContainer" style="display:none">
+      <div class="calendar-header">
+        <button onclick="navCalendar(-1)">◀</button>
+        <select id="villaSelect" onchange="loadCalendar()"></select>
+        <h2 id="calendarTitle">July 2026</h2>
+        <select id="monthSelect" onchange="loadCalendar()">
+          <option value="1">January</option><option value="2">February</option>
+          <option value="3">March</option><option value="4">April</option>
+          <option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option>
+          <option value="9">September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+        <input type="number" id="yearInput" value="2026" min="2020" max="2030" style="width:70px" onchange="loadCalendar()">
+        <button onclick="navCalendar(1)">▶</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <!-- Durum View -->
+    <div id="durumContainer" style="display:none">
+      <div class="durum-hero" id="durumHero"></div>
+      <div style="margin-top:16px">
+        <div class="section-title" style="margin-bottom:8px"><span class="status-dot green"></span> Available Now <span class="badge" id="durumAvailBadge">0</span></div>
+        <div class="durum-list" id="durumAvailable"></div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="section-title" style="margin-bottom:8px"><span class="status-dot red"></span> Currently Occupied <span class="badge" id="durumOccBadge">0</span></div>
+        <div class="durum-list" id="durumOccupied"></div>
+      </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="results-section" id="resultsSection" style="display:none">
+      <div id="singleResults"></div>
+      <div id="sequenceResults"></div>
+      <div id="noSequencesInfo" style="display:none;padding:12px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
+        <span style="color:var(--text-dim)">💡 Enable "Allow multi-villa sequences" in the sidebar to find split-stay options.</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Bottom Navigation (Mobile) -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="active" data-mobile-tab="search" onclick="mobileNav('search')">
+    <span class="nav-icon">🔍</span> Search
+  </button>
+  <button data-mobile-tab="durum" onclick="mobileNav('durum')">
+    <span class="nav-icon">📊</span> Durum
+  </button>
+  <button data-mobile-tab="calendar" onclick="mobileNav('calendar')">
+    <span class="nav-icon">📅</span> Calendar
+  </button>
+  <button data-mobile-tab="villas" onclick="mobileNav('villas')">
+    <span class="nav-icon">🏠</span> Villas
+  </button>
+</nav>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────
+let state = {
+  villas: [],
+  currentVilla: '',
+  currentYear: new Date().getFullYear(),
+  currentMonth: new Date().getMonth() + 1,
+  lastSearch: null,
+  manualReservations: [],
+  activeTab: 'search',
+};
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  await loadVillas();
+  await loadStats();
+  await loadTags();
+  document.getElementById('searchForm').addEventListener('submit', handleSearch);
+  // Set default dates
+  const today = new Date();
+  document.getElementById('checkIn').value = today.toISOString().slice(0,10);
+  const nextWeek = new Date(today);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  document.getElementById('checkOut').value = nextWeek.toISOString().slice(0,10);
+  document.getElementById('yearInput').value = state.currentYear;
+  document.getElementById('monthSelect').value = state.currentMonth;
+  // Show initial calendar
+  switchTab('search');
+}
+init();
+
+// ── Tab Switching ─────────────────────────────────────────────
+function switchTab(tab) {
+  state.activeTab = tab;
+  // Sidebar tabs
+  document.querySelectorAll('.sidebar-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  // Tab content in sidebar
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  const tc = document.getElementById('tab-' + tab);
+  if (tc) tc.style.display = 'block';
+
+  // Main content
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('calendarContainer').style.display = 'none';
+  document.getElementById('durumContainer').style.display = 'none';
+
+  if (tab === 'search') {
+    document.getElementById('statsBar').style.display = 'flex';
+  } else if (tab === 'calendar') {
+    document.getElementById('calendarContainer').style.display = 'block';
+    document.getElementById('statsBar').style.display = 'none';
+    if (!state.currentVilla && state.villas.length > 0) {
+      state.currentVilla = state.villas[0].name;
+      document.getElementById('villaSelect').value = state.currentVilla;
+    }
+    loadCalendar();
+  } else if (tab === 'durum') {
+    loadDurum();
+    document.getElementById('statsBar').style.display = 'none';
+  }
+}
+
+function showDurumInMain() {
+  loadDurum();
+  document.getElementById('durumContainer').style.display = 'block';
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('calendarContainer').style.display = 'none';
+  document.getElementById('statsBar').style.display = 'none';
+}
+
+function mobileNav(tab) {
+  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.mobileTab === tab));
+
+  // On mobile: for calendar/durum, show in main area; for villas, scroll sidebar
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('calendarContainer').style.display = 'none';
+  document.getElementById('durumContainer').style.display = 'none';
+  document.getElementById('statsBar').style.display = 'flex';
+
+  if (tab === 'search') {
+    switchTab('search');
+  } else if (tab === 'calendar') {
+    switchTab('calendar');
+  } else if (tab === 'durum') {
+    loadDurum();
+    document.getElementById('durumContainer').style.display = 'block';
+    document.getElementById('statsBar').style.display = 'none';
+  } else if (tab === 'villas') {
+    // Scroll villa list into view on mobile
+    document.getElementById('villaList').scrollIntoView({ behavior: 'smooth' });
+    switchTab('search');
+  }
+}
+
+// ── Load Tags ─────────────────────────────────────────────────
+async function loadTags() {
+  try {
+    const res = await fetch('/api/tags');
+    const data = await res.json();
+    const dropdown = document.getElementById('locationDropdown');
+    const locs = data.locations || [];
+    let html = `<label class="select-all-row">
+      <input type="checkbox" id="locAll" checked onchange="toggleAllLocations(this)">
+      <span>All Locations</span>
+    </label>`;
+    locs.forEach(loc => {
+      html += `<label>
+        <input type="checkbox" class="loc-cb" value="${loc}" onchange="updateLocationBtn()">
+        <span>${loc}</span>
+      </label>`;
+    });
+    dropdown.innerHTML = html;
+  } catch(e) { console.error('Tags load failed:', e); }
+}
+
+function toggleLocationDropdown() {
+  const dd = document.getElementById('locationDropdown');
+  const btn = document.getElementById('locationBtn');
+  const open = dd.style.display === 'block';
+  dd.style.display = open ? 'none' : 'block';
+  btn.className = 'multi-select-btn' + (open ? '' : ' open');
+}
+
+document.addEventListener('mousedown', function(e) {
+  const ms = document.getElementById('locationMultiSelect');
+  if (!ms) return;
+  const dd = document.getElementById('locationDropdown');
+  const btn = document.getElementById('locationBtn');
+  if (!ms.contains(e.target)) { dd.style.display = 'none'; btn.className = 'multi-select-btn'; }
+});
+
+function toggleAllLocations(cb) {
+  document.querySelectorAll('.loc-cb').forEach(c => c.checked = !cb.checked);
+  updateLocationBtn();
+}
+
+function updateLocationBtn() {
+  const checkboxes = document.querySelectorAll('.loc-cb');
+  const checked = [...checkboxes].filter(c => c.checked);
+  const allCb = document.getElementById('locAll');
+  const btn = document.getElementById('locationBtnText');
+  if (checked.length === 0 || (allCb && allCb.checked)) {
+    btn.textContent = 'All Locations';
+    if (allCb) allCb.checked = true;
+    checkboxes.forEach(c => c.checked = false);
+  } else {
+    btn.textContent = `${checked.length} location${checked.length > 1 ? 's' : ''} selected`;
+    if (allCb) allCb.checked = false;
+  }
+}
+
+function getSelectedLocations() {
+  const checkboxes = document.querySelectorAll('.loc-cb');
+  const checked = [...checkboxes].filter(c => c.checked);
+  const allCb = document.getElementById('locAll');
+  if ((allCb && allCb.checked) || checked.length === 0) return [];
+  return checked.map(c => c.value);
+}
+
+// ── Load Villas ───────────────────────────────────────────────
+async function loadVillas() {
+  try {
+    const res = await fetch('/api/villas');
+    const data = await res.json();
+    state.villas = data.villas || [];
+    renderVillaList();
+    populateVillaSelect();
+  } catch(e) { console.error('Failed to load villas:', e); }
+}
+
+function renderVillaList() {
+  const el = document.getElementById('villaList');
+  el.innerHTML = state.villas.map(v => {
+    const locs = (v.locations || []).join(', ') || '';
+    const cap = v.capacity ? `${v.capacity}p` : '';
+    const link = v.resital_url || v.solmar_url || '';
+    const active = v.name === state.currentVilla ? 'active' : '';
+    return `
+    <div class="villa-list-item ${active}" onclick="selectVilla('${v.name}')">
+      <div class="vl-info">
+        <div class="vl-name">${v.name}</div>
+        <div class="vl-meta">
+          ${cap ? `<span>👤 ${cap}</span>` : ''}
+          ${locs ? `<span>📍 ${locs}</span>` : ''}
+        </div>
+        ${link ? `<a class="vl-link" href="${link}" target="_blank" onclick="event.stopPropagation()" title="Open listing">🏠 listing</a>` : ''}
+      </div>
+      <span class="occ-dots">
+        ${v.occupancies.filter(o=>o.confidence==='confirmed').length > 0
+          ? `<span class="occ-dot c" title="${v.occupancies.filter(o=>o.confidence==='confirmed').length} confirmed"></span>` : ''}
+        ${v.occupancies.filter(o=>o.confidence==='likely_active').length > 0
+          ? `<span class="occ-dot l" title="${v.occupancies.filter(o=>o.confidence==='likely_active').length} likely"></span>` : ''}
+        ${v.occupancies.filter(o=>o.confidence==='ambiguous').length > 0
+          ? `<span class="occ-dot a" title="${v.occupancies.filter(o=>o.confidence==='ambiguous').length} ambiguous"></span>` : ''}
+      </span>
+    </div>`;
+  }).join('');
+  if (state.villas.length === 0) el.innerHTML = '<div style="padding:20px;color:var(--text-dim)">No villas loaded</div>';
+}
+
+function populateVillaSelect() {
+  const sel = document.getElementById('villaSelect');
+  const mrSel = document.getElementById('mrVilla');
+  const opts = state.villas.map(v =>
+    `<option value="${v.name}" ${v.name === state.currentVilla ? 'selected' : ''}>${v.name}</option>`
+  ).join('');
+  sel.innerHTML = opts;
+  if (mrSel) mrSel.innerHTML = '<option value="">Select villa...</option>' + state.villas.map(v =>
+    `<option value="${v.name}">${v.name}</option>`
+  ).join('');
+  if (state.currentVilla === '' && state.villas.length > 0) {
+    state.currentVilla = state.villas[0].name;
+    sel.value = state.currentVilla;
+  }
+}
+
+function selectVilla(name) {
+  state.currentVilla = name;
+  document.getElementById('villaSelect').value = name;
+  renderVillaList();
+  switchTab('calendar');
+}
+
+// ── Durum (Status Overview) ───────────────────────────────────
+async function loadDurum() {
+  document.getElementById('durumContainer').style.display = 'block';
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('calendarContainer').style.display = 'none';
+
+  try {
+    const res = await fetch('/api/durum');
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    renderDurum(data);
+  } catch(e) {
+    document.getElementById('durumContainer').innerHTML = '<div style="color:var(--red);padding:20px">Failed to load durum: ' + e.message + '</div>';
+  }
+}
+
+function renderDurum(data) {
+  // Hero cards
+  document.getElementById('durumHero').innerHTML = `
+    <div class="durum-hero-card avail">
+      <div class="big-num">${data.available_count}</div>
+      <div class="big-label">Available Now</div>
+    </div>
+    <div class="durum-hero-card occ">
+      <div class="big-num">${data.occupied_count}</div>
+      <div class="big-label">Occupied</div>
+    </div>
+    <div class="durum-hero-card" style="border-color:var(--accent)">
+      <div class="big-num" style="color:var(--accent)">${data.total_villas}</div>
+      <div class="big-label">Total Villas</div>
+    </div>
+    <div class="durum-hero-card">
+      <div style="font-size:1rem;color:var(--text-dim);margin-bottom:4px">📅</div>
+      <div style="font-size:0.75rem;color:var(--text);font-weight:600">${formatDate(data.date)}</div>
+      <div class="big-label">As of</div>
+    </div>
+  `;
+
+  document.getElementById('durumAvailBadge').textContent = data.available_count;
+  document.getElementById('durumOccBadge').textContent = data.occupied_count;
+
+  // Available villas
+  let availHtml = '';
+  data.available.forEach(v => {
+    const locs = (v.locations || []).join(', ');
+    const cap = v.capacity ? ` — ${v.capacity}p` : '';
+    const freeUntil = v.free_until ? formatDate(v.free_until) : '';
+    const nextInfo = v.next_booking
+      ? `Next: ${formatDate(v.next_booking.start)}→${formatDate(v.next_booking.end)} (${v.next_booking.passenger || 'Guest'})`
+      : '';
+
+    availHtml += `
+    <div class="durum-row available" onclick="quickSearch('${v.name}')">
+      <div class="dr-name">
+        ${v.name}
+        <small>${cap} ${locs ? '· ' + locs : ''}</small>
+      </div>
+      <div class="dr-dates">
+        ${freeUntil ? `Free until <strong>${freeUntil}</strong>` : '<strong>No bookings ahead</strong>'}
+        ${nextInfo ? `<br><span style="font-size:0.7rem;color:var(--text-muted)">${nextInfo}</span>` : ''}
+      </div>
+      ${v.resital_url ? `<a class="dr-link" href="${v.resital_url}" target="_blank" onclick="event.stopPropagation()">🏠</a>` : ''}
+    </div>`;
+  });
+  document.getElementById('durumAvailable').innerHTML = availHtml || '<div style="color:var(--text-dim);padding:12px">No villas available right now</div>';
+
+  // Occupied villas
+  let occHtml = '';
+  data.occupied.forEach(v => {
+    const locs = (v.locations || []).join(', ');
+    const cap = v.capacity ? ` — ${v.capacity}p` : '';
+    const until = formatDate(v.occupied_until);
+
+    occHtml += `
+    <div class="durum-row occupied" onclick="quickSearch('${v.name}')">
+      <div class="dr-name">
+        ${v.name}
+        <small>${cap} ${locs ? '· ' + locs : ''}</small>
+      </div>
+      <div style="flex:1;text-align:right">
+        <div class="dr-guest">${v.current_guest || 'Guest'} ${v.current_extras ? '· ' + v.current_extras : ''}</div>
+        <div class="dr-dates">First available: <strong>${until}</strong></div>
+      </div>
+      ${v.resital_url ? `<a class="dr-link" href="${v.resital_url}" target="_blank" onclick="event.stopPropagation()">🏠</a>` : ''}
+    </div>`;
+  });
+  document.getElementById('durumOccupied').innerHTML = occHtml || '<div style="color:var(--text-dim);padding:12px">No villas occupied</div>';
+}
+
+function quickSearch(villaName) {
+  document.getElementById('checkIn').value = new Date().toISOString().slice(0,10);
+  const nextWeek = new Date();
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  document.getElementById('checkOut').value = nextWeek.toISOString().slice(0,10);
+  document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+  switchTab('search');
+}
+
+// ── Calendar ──────────────────────────────────────────────────
+async function loadCalendar() {
+  state.currentVilla = document.getElementById('villaSelect').value;
+  state.currentMonth = parseInt(document.getElementById('monthSelect').value);
+  state.currentYear = parseInt(document.getElementById('yearInput').value);
+
+  document.getElementById('calendarTitle').textContent =
+    `${document.getElementById('monthSelect').selectedOptions[0].text} ${state.currentYear}`;
+
+  if (!state.currentVilla) return;
+
+  try {
+    const res = await fetch(`/api/calendar/${encodeURIComponent(state.currentVilla)}?year=${state.currentYear}&month=${state.currentMonth}`);
+    const data = await res.json();
+    renderCalendar(data);
+  } catch(e) { console.error('Calendar load failed:', e); }
+}
+
+function navCalendar(dir) {
+  let m = state.currentMonth + dir;
+  let y = state.currentYear;
+  if (m < 1) { m = 12; y--; }
+  if (m > 12) { m = 1; y++; }
+  state.currentMonth = m;
+  state.currentYear = y;
+  document.getElementById('monthSelect').value = m;
+  document.getElementById('yearInput').value = y;
+  loadCalendar();
+}
+
+const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function renderCalendar(data) {
+  const grid = document.getElementById('calendarGrid');
+  let html = '<table><thead><tr>';
+  DAY_NAMES.forEach(d => html += `<th>${d}</th>`);
+  html += '</tr></thead><tbody>';
+
+  const CONF_COLORS = {
+    confirmed: 'rgba(74,222,128,0.4)',
+    likely_active: 'rgba(251,191,36,0.4)',
+    ambiguous: 'rgba(248,113,113,0.4)',
+  };
+
+  data.weeks.forEach(week => {
+    html += '<tr>';
+    week.forEach(day => {
+      let cellClass = day.status;
+      if (day.is_turnover) {
+        cellClass = 'turnover';
+      } else if (day.has_checkin) {
+        cellClass += ' arrival';
+      } else if (day.has_checkout) {
+        cellClass += ' departure';
+      }
+
+      const classes = [day.is_padding ? 'padding' : '', day.is_today ? 'today' : '',
+                       day.is_past ? 'past' : '', cellClass].filter(Boolean).join(' ');
+
+      const dateStr = day.date ? `data-date="${day.date}"` : '';
+      const occData = day.occupants.length > 0
+        ? `data-occupants='${JSON.stringify(day.occupants).replace(/'/g,"&#39;")}'`
+        : '';
+
+      let inlineStyle = '';
+      if (day.is_turnover) {
+        const outC = CONF_COLORS[day.checkout_confidence] || 'rgba(251,191,36,0.4)';
+        const inC = CONF_COLORS[day.checkin_confidence] || 'rgba(74,222,128,0.4)';
+        inlineStyle = `style="--t-out-color:${outC};--t-in-color:${inC}"`;
+      }
+
+      html += `<td class="${classes}" ${dateStr} ${occData} ${inlineStyle}
+                    onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"
+                    ontouchstart="showTooltip(event, this)" ontouchend="hideTooltip()">`;
+      if (!day.is_padding) {
+        html += `<div class="day-num">${day.day}</div>`;
+        if (day.is_turnover) {
+          html += `<div class="passenger" style="color:var(--yellow)">←${(day.checkout_passenger||'Ç').substring(0,8)}</div>`;
+          html += `<div class="passenger" style="color:var(--green)">${(day.checkin_passenger||'G').substring(0,8)}→</div>`;
+        } else if (day.has_checkin) {
+          html += `<div class="passenger">↓${(day.label||'Giriş').substring(0,10)}</div>`;
+        } else if (day.has_checkout) {
+          html += `<div class="passenger">↑${(day.checkout_passenger||'Çıkış').substring(0,10)}</div>`;
+        } else if (day.label) {
+          html += `<div class="passenger">${day.label}</div>`;
+        }
+      }
+      html += '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  grid.innerHTML = html;
+}
+
+// ── Tooltip ───────────────────────────────────────────────────
+function showTooltip(e, cell) {
+  const data = cell.getAttribute('data-occupants');
+  if (!data) return;
+  const occupants = JSON.parse(data);
+  const tip = document.getElementById('tooltip');
+  tip.innerHTML = occupants.map(o =>
+    `<div style="margin-bottom:4px">
+      <strong>${o.passenger || 'Unknown'}</strong>
+      <span style="color:${o.confidence==='confirmed'?'var(--green)':o.confidence==='likely_active'?'var(--yellow)':'var(--red)'}">${o.confidence.replace('_',' ')}</span>
+      <br><span style="color:var(--text-muted)">${o.start} → ${o.end}</span>
+    </div>`
+  ).join('');
+  tip.className = 'tooltip visible';
+
+  const ev = e.touches ? e.touches[0] : e;
+  let left = ev.clientX + 14;
+  let top = ev.clientY + 10;
+  if (left + 300 > window.innerWidth - 10) left = ev.clientX - 300 - 14;
+  if (top + (occupants.length * 52 + 24) > window.innerHeight - 10) top = ev.clientY - (occupants.length * 52 + 24) - 10;
+  if (left < 5) left = 5;
+  if (top < 5) top = 5;
+
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').className = 'tooltip';
+}
+
+// ── Search ────────────────────────────────────────────────────
+async function handleSearch(e) {
+  e.preventDefault();
+  const ci = document.getElementById('checkIn').value;
+  const co = document.getElementById('checkOut').value;
+  const persons = document.getElementById('persons').value || '2';
+  const selectedLocs = getSelectedLocations();
+  const seq = document.getElementById('allowSequences').checked;
+
+  if (!ci || !co) { alert('Please select check-in and check-out dates'); return; }
+
+  try {
+    const params = new URLSearchParams({ check_in: ci, check_out: co, persons, allow_sequences: seq });
+    selectedLocs.forEach(loc => params.append('locations', loc));
+    const res = await fetch('/api/search?' + params);
+    if (!res.ok) { console.error('Search API error:', res.status); return; }
+    const data = await res.json();
+    state.lastSearch = data;
+    renderResults(data);
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('calendarContainer').style.display = 'none';
+    document.getElementById('durumContainer').style.display = 'none';
+    document.getElementById('statsBar').style.display = 'flex';
+    document.getElementById('noSequencesInfo').style.display = seq ? 'none' : 'block';
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) { console.error('Search failed:', e); }
+}
+
+function renderResults(data) {
+  const singleDiv = document.getElementById('singleResults');
+  const seqDiv = document.getElementById('sequenceResults');
+
+  const avail = data.single_villas.filter(v => v.is_available && !v.is_flagged);
+  const flagged = data.single_villas.filter(v => v.is_available && v.is_flagged);
+  const unavail = data.single_villas.filter(v => !v.is_available);
+
+  let html = '';
+
+  if (avail.length > 0) {
+    html += `<div class="section-title"><span class="status-dot green"></span> Available Villas <span class="badge">${avail.length}</span></div>`;
+    html += '<div class="villa-grid">' + avail.map(v => villaCard(v, 'available')).join('') + '</div>';
+  }
+
+  if (flagged.length > 0) {
+    html += `<div class="section-title" style="margin-top:16px"><span class="status-dot yellow"></span> Available but Flagged <span class="badge">${flagged.length}</span></div>`;
+    html += '<div class="villa-grid">' + flagged.map(v => villaCard(v, 'flagged')).join('') + '</div>';
+  }
+
+  if (avail.length === 0 && flagged.length === 0) {
+    html += `<div class="section-title"><span class="status-dot red"></span> No Villas Available for Full Period</div>`;
+    html += `<p style="color:var(--text-dim);margin-top:8px">All ${data.single_villas.length} villas are occupied or have conflicting records for these dates.</p>`;
+  }
+
+  html += `<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--text-dim);font-size:0.8rem">Show ${unavail.length} unavailable villas</summary>`;
+  html += '<div class="villa-grid" style="margin-top:8px">' + unavail.map(v => villaCard(v, 'unavailable')).join('') + '</div></details>';
+
+  singleDiv.innerHTML = html;
+
+  if (data.sequences && data.sequences.length > 0) {
+    let shtml = `<div class="section-title" style="margin-top:20px"><span class="status-dot purple"></span> Multi-Villa Sequences <span class="badge">${data.sequences.length}</span></div>`;
+    data.sequences.forEach((seq, i) => {
+      shtml += `<div class="sequence-item">
+        <div class="score">#${i+1} — Score: ${seq.score} · ${seq.num_moves} move(s) · ${seq.same_region_count} same-region</div>
+        <div class="sequence-path">`;
+      seq.segments.forEach((seg, j) => {
+        if (j > 0) shtml += '<span class="sequence-arrow">→</span>';
+        shtml += `<div class="sequence-segment">
+          <div class="vname">${seg.villa}</div>
+          <div class="dates">${formatDate(seg.start)} → ${formatDate(seg.end)}<br>${seg.nights} nights</div>
+        </div>`;
+      });
+      shtml += '</div></div>';
+    });
+    seqDiv.innerHTML = shtml;
+  } else {
+    seqDiv.innerHTML = '';
+  }
+}
+
+function villaCard(v, type) {
+  const locs = (v.locations || []).map(l => `📍 ${l}`).join(' ');
+  const cap = v.capacity ? `👤 ${v.capacity}` : '';
+  const area = v.area ? `🏘 ${v.area}` : '';
+  const beds = v.bedrooms ? `🛏 ${v.bedrooms}` : '';
+  const baths = v.bathrooms ? `🛁 ${v.bathrooms}` : '';
+  const attrs = (v.attributes || []).map(a => `<span class="tag">${a}</span>`).join('');
+  const allExtras = new Set();
+  (v.occupancies || []).forEach(o => {
+    if (o.extras && typeof o.extras === 'string') {
+      o.extras.split(',').map(e => e.trim()).filter(Boolean).forEach(e => allExtras.add(e));
+    }
+  });
+  const extrasTags = [...allExtras].map(e => `<span class="tag extras">📦 ${e}</span>`).join('');
+
+  let blockingHtml = '';
+  if (v.blocking && v.blocking.length > 0) {
+    blockingHtml = '<div style="margin-top:6px;font-size:0.7rem;color:var(--red)">Blocked by: ' +
+      v.blocking.map(b => `${b.passenger || 'Guest'} (${formatDate(b.start)}→${formatDate(b.end)}) [${b.confidence}]`).join(', ') +
+      '</div>';
+  }
+
+  let ambiguousHtml = '';
+  if (v.ambiguous && v.ambiguous.length > 0) {
+    ambiguousHtml = '<div style="margin-top:4px;font-size:0.7rem;color:var(--yellow)">⚠ ' +
+      v.ambiguous.map(a => `${a.passenger || 'Guest'} (${formatDate(a.start)}→${formatDate(a.end)})`).join(', ') +
+      '</div>';
+  }
+
+  let linksHtml = '';
+  if (v.resital_url || v.solmar_url) {
+    linksHtml = '<div style="margin-top:6px;display:flex;gap:8px;font-size:0.7rem">';
+    if (v.resital_url) linksHtml += `<a href="${v.resital_url}" target="_blank" style="color:var(--accent);text-decoration:none" title="Resital">🏠 Resital</a>`;
+    if (v.solmar_url) linksHtml += `<a href="${v.solmar_url}" target="_blank" style="color:var(--accent);text-decoration:none" title="Solmar">☀️ Solmar</a>`;
+    linksHtml += '</div>';
+  }
+
+  return `<div class="villa-card ${type}">
+    <h3>${v.name}</h3>
+    <div class="meta">
+      ${cap ? `<span>${cap}</span>` : ''}
+      ${locs ? `<span>${locs}</span>` : ''}
+      ${area ? `<span>${area}</span>` : ''}
+      ${beds ? `<span>${beds}</span>` : ''}
+      ${baths ? `<span>${baths}</span>` : ''}
+    </div>
+    ${attrs ? `<div class="tags">${attrs}</div>` : ''}
+    ${extrasTags ? `<div class="tags">${extrasTags}</div>` : ''}
+    <div class="reason">${v.reason || ''}</div>
+    ${linksHtml}
+    ${blockingHtml}
+    ${ambiguousHtml}
+  </div>`;
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+}
+
+// ── Manual Reservations ──────────────────────────────────────
+function toggleManualResForm() {
+  const body = document.getElementById('manualResBody');
+  const btn = document.querySelector('.manual-res-toggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  btn.className = 'manual-res-toggle' + (open ? '' : ' open');
+  if (!open) loadManualReservations();
+}
+
+async function loadManualReservations() {
+  try {
+    const res = await fetch('/api/manual-reservations');
+    const data = await res.json();
+    state.manualReservations = data.reservations || [];
+    renderManualResList();
+  } catch(e) { console.error('Manual res load failed:', e); }
+}
+
+function renderManualResList() {
+  const el = document.getElementById('manualResList');
+  if (state.manualReservations.length === 0) {
+    el.innerHTML = '<div style="font-size:0.7rem;color:var(--text-muted);padding:8px 0">No manual reservations yet</div>';
+    return;
+  }
+  el.innerHTML = state.manualReservations.map((r, i) => `
+    <div class="manual-res-item">
+      <div>
+        <span class="mr-villa">${r.villa}</span>
+        <span class="mr-dates">${formatDate(r.start)} → ${formatDate(r.end)}</span>
+        ${r.passenger ? `<span style="color:var(--text-dim)"> — ${r.passenger}</span>` : ''}
+        ${r.extras ? `<br><span style="color:var(--orange);font-size:0.65rem">${r.extras}</span>` : ''}
+      </div>
+      <span class="mr-del" onclick="deleteManualReservation(${i})" title="Delete">✕</span>
+    </div>`).join('');
+}
+
+async function addManualReservation() {
+  const villa = document.getElementById('mrVilla').value;
+  const start = document.getElementById('mrStart').value;
+  const end = document.getElementById('mrEnd').value;
+  const passenger = document.getElementById('mrPassenger').value;
+  const extras = document.getElementById('mrExtras').value;
+  const status = document.getElementById('mrStatus');
+
+  if (!villa || !start || !end) { status.textContent = '⚠ Villa and dates required'; status.style.color = 'var(--red)'; return; }
+
+  try {
+    const params = new URLSearchParams({ villa, start, end, passenger, extras });
+    const res = await fetch('/api/manual-reservations?' + params, { method: 'POST' });
+    if (!res.ok) { const err = await res.json(); status.textContent = '⚠ ' + err.error; status.style.color = 'var(--red)'; return; }
+    status.textContent = '✓ Added — timelines rebuilt';
+    status.style.color = 'var(--green)';
+    document.getElementById('mrStart').value = '';
+    document.getElementById('mrEnd').value = '';
+    document.getElementById('mrPassenger').value = '';
+    document.getElementById('mrExtras').value = '';
+    await loadManualReservations();
+    await loadVillas();
+    if (state.currentVilla === villa) loadCalendar();
+    setTimeout(() => { status.textContent = ''; }, 4000);
+  } catch(e) { status.textContent = '⚠ Failed'; status.style.color = 'var(--red)'; }
+}
+
+async function deleteManualReservation(index) {
+  if (!confirm('Delete this manual reservation?')) return;
+  try {
+    const res = await fetch('/api/manual-reservations/' + index, { method: 'DELETE' });
+    if (!res.ok) return;
+    await loadManualReservations();
+    await loadVillas();
+    loadCalendar();
+  } catch(e) { console.error('Delete failed:', e); }
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-card green">
+        <div class="num">${data.occupancy.confirmed}</div>
+        <div class="label">Confirmed</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="num">${data.occupancy.likely_active}</div>
+        <div class="label">Likely Active</div>
+      </div>
+      <div class="stat-card red">
+        <div class="num">${data.occupancy.ambiguous}</div>
+        <div class="label">Ambiguous</div>
+      </div>
+      <div class="stat-card accent">
+        <div class="num">${data.villas_tracked}</div>
+        <div class="label">Villas Tracked</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">${data.snapshots_loaded}</div>
+        <div class="label">Snapshots</div>
+      </div>
+    `;
+  } catch(e) { console.error('Stats load failed:', e); }
+}
+</script>
+</body>
+</html>
