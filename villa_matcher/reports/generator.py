@@ -27,6 +27,53 @@ from villa_matcher.reports.reservations import (
 )
 
 
+# ── Manual reservation helpers ────────────────────────────────────────────────
+
+def _load_manual_reservations_as_dicts(manual_path: str | None) -> list[dict]:
+    """Load manual_reservations.json and convert to the dict format
+    expected by categorise_by_villas (Accomodation Name, Holiday Start Date, etc.)."""
+    if not manual_path or not os.path.isfile(manual_path):
+        return []
+
+    with open(manual_path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    result = []
+    for entry in raw:
+        try:
+            start = entry["start"]   # "2026-08-10"
+            end = entry["end"]       # "2026-08-17"
+        except KeyError:
+            continue
+
+        # Convert ISO dates to dd/mm/yy format used by the Excel reports
+        try:
+            sd = datetime.strptime(start, "%Y-%m-%d")
+            ed = datetime.strptime(end, "%Y-%m-%d")
+            start_fmt = sd.strftime("%d/%m/%y")
+            end_fmt = ed.strftime("%d/%m/%y")
+        except ValueError:
+            start_fmt = start
+            end_fmt = end
+
+        villa_name = entry.get("villa", "")
+        # Normalize: always use "Villa X" format to match Excel data
+        if villa_name and not villa_name.startswith("Villa "):
+            villa_name = f"Villa {villa_name}"
+
+        result.append({
+            "Accomodation Name": villa_name,
+            "Holiday Start Date": start_fmt,
+            "Holiday End Date": end_fmt,
+            "Lead Passenger": entry.get("passenger", ""),
+            "ExtrasAggregated": entry.get("extras", ""),
+            "_manual": True,  # marker to distinguish manual entries
+            "_notes": entry.get("notes", ""),
+        })
+
+    return result
+
+
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
 def _filter_extras_text(extras: str) -> str:
@@ -67,13 +114,31 @@ DATE_COLS = {
 
 # ── Weekly Report ───────────────────────────────────────────────────────────
 
-def weekly_report(excel_path: str, caretakers_path: str) -> str:
-    """Generate caretaker-based weekly villa report."""
+def weekly_report(
+    excel_path: str,
+    caretakers_path: str,
+    manual_reservations_path: str | None = None,
+) -> str:
+    """Generate caretaker-based weekly villa report.
+
+    Args:
+        excel_path: Path to the latest Resort Report .xlsx snapshot.
+        caretakers_path: Path to caretakers.json assignments.
+        manual_reservations_path: Optional path to manual_reservations.json.
+            Manual reservations are merged with Excel data so they appear
+            in the caretaker report.
+    """
     caretakers = get_caretakers(caretakers_path)
     if caretakers and isinstance(caretakers[0], str):
         raise ValueError(f"Wrong file — expected caretakers.json, got a string list.")
 
     reservations = extract_reservations(excel_path)
+
+    # Merge manual reservations so they appear in the weekly report
+    manual_dicts = _load_manual_reservations_as_dicts(manual_reservations_path)
+    if manual_dicts:
+        reservations = list(reservations) + manual_dicts
+
     reservations = sorted(
         reservations,
         key=lambda r: (
@@ -108,6 +173,9 @@ def weekly_report(excel_path: str, caretakers_path: str) -> str:
                     else:
                         extra += ")\n" if extra else "\n"
                     output += extra
+                    # Show notes for manual reservations
+                    if r.get("_manual") and r.get("_notes"):
+                        output += f"  [Not: {r['_notes']}]\n"
         ct["output"] = output
 
     return "\n\n".join([ct["output"] for ct in caretakers])

@@ -531,11 +531,17 @@ def api_weekly_report():
     excel = select_first_file_with_extension(".xlsx", _snapshots_dir)
     if not excel:
         return JSONResponse({"error": "No Excel file found"}, status_code=404)
-    ct_path = os.path.join(os.path.dirname(_villas_json), "..", "inputs", "caretakers.json")
+    ct_path = os.path.join(os.path.dirname(_villas_json), "caretakers.json")
+    if not os.path.exists(ct_path):
+        ct_path = os.path.join(os.path.dirname(_villas_json), "..", "inputs", "caretakers.json")
     if not os.path.exists(ct_path):
         ct_path = "/home/yusuf/Masaüstü/Resital Villa Scripts/inputs/caretakers.json"
 
-    report = weekly_report(excel, ct_path)
+    report = weekly_report(
+        excel,
+        ct_path,
+        manual_reservations_path=_manual_reservations_json,
+    )
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(report, media_type="text/plain; charset=utf-8")
 
@@ -562,7 +568,9 @@ def api_hamdi_report():
     """Generate and download the Hamdi Abi report (unassigned villas)."""
     from villa_matcher.reports.generator import hamdi_abi_report
     inputs = os.path.dirname(_snapshots_dir)
-    ct = "/home/yusuf/Masaüstü/Resital Villa Scripts/inputs/caretakers.json"
+    ct = os.path.join(os.path.dirname(_villas_json), "caretakers.json")
+    if not os.path.exists(ct):
+        ct = "/home/yusuf/Masaüstü/Resital Villa Scripts/inputs/caretakers.json"
     report = hamdi_abi_report(inputs, ct)
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(report, media_type="text/plain; charset=utf-8")
