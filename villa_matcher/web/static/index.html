@@ -324,36 +324,144 @@ body {
   border-bottom: 1px solid var(--border); font-weight: 600; color: var(--accent);
 }
 
-/* ── Manual Reservation Form ─────────────────────────────────── */
-.manual-res-section { border-bottom: 1px solid var(--border); }
-.manual-res-toggle {
-  width: 100%; padding: 12px 20px; background: transparent; border: none;
-  color: var(--text-dim); font-size: 0.8rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: space-between;
-  font-family: var(--font); transition: background 0.15s;
-}
-.manual-res-toggle:hover { background: rgba(56,189,248,0.05); }
-.manual-res-toggle .arrow { font-size: 0.7rem; transition: transform 0.2s; }
-.manual-res-toggle.open .arrow { transform: rotate(90deg); }
-.manual-res-body { padding: 0 20px 12px; }
-.manual-res-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 5px 0; font-size: 0.7rem; color: var(--text-dim);
-  border-bottom: 1px solid rgba(51,65,85,0.3);
-}
-.manual-res-item .mr-villa { color: var(--accent); font-weight: 600; }
-.manual-res-item .mr-dates { color: var(--text-muted); }
-.manual-res-item .mr-del {
-  color: var(--red); cursor: pointer; font-size: 1rem; padding: 4px 6px;
-  opacity: 0.6; transition: opacity 0.15s;
-}
-.manual-res-item .mr-del:hover { opacity: 1; }
-
 /* ── Extras Tags ─────────────────────────────────────────────── */
 .tag.extras {
   background: rgba(251,146,60,0.12); color: var(--orange);
   border: 1px solid rgba(251,146,60,0.25);
 }
+
+/* ── Action Bar ───────────────────────────────────────────────── */
+.action-bar {
+  display: flex; align-items: center; gap: 12px; padding: 0 0 16px 0;
+  flex-wrap: wrap;
+}
+.file-upload-widget {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+}
+.upload-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 16px; background: var(--surface); border: 1px solid var(--accent);
+  border-radius: var(--radius); color: var(--accent); font-size: 0.85rem;
+  font-family: var(--font); cursor: pointer; font-weight: 600;
+  transition: all 0.2s; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.upload-btn:hover { background: rgba(56,189,248,0.1); }
+.upload-btn .upload-icon { font-size: 1rem; }
+.upload-status { font-size: 0.7rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upload-status.success { color: var(--green); }
+.upload-status.error { color: var(--red); }
+
+/* ── Modal System ─────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.65); display: flex;
+  align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); width: 90%; max-width: 480px;
+  max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+  animation: slideUp 0.25s ease;
+}
+.modal-card.modal-wide { max-width: 640px; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 1rem; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.modal-close {
+  padding: 6px 10px; background: transparent; border: none;
+  color: var(--text-dim); font-size: 1.3rem; cursor: pointer;
+  line-height: 1; border-radius: var(--radius);
+  transition: all 0.15s; font-family: var(--font);
+}
+.modal-close:hover { color: var(--red); background: rgba(248,113,113,0.1); }
+.modal-body { padding: 20px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+.modal-status { font-size: 0.75rem; margin-top: 10px; min-height: 20px; }
+
+/* ── Form Elements ─────────────────────────────────────────────── */
+.form-group { margin-bottom: 12px; }
+.form-group label {
+  display: block; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;
+}
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%; padding: 10px 12px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); font-size: 0.85rem; font-family: var(--font);
+  outline: none; transition: border-color 0.2s; resize: vertical;
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+  border-color: var(--accent);
+}
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+
+/* ── Generic Buttons ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px; border: none; border-radius: var(--radius);
+  font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  font-family: var(--font); transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.btn.primary { background: var(--accent); color: #0f172a; }
+.btn.primary:hover { filter: brightness(1.1); }
+.btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn.secondary:hover { background: rgba(56,189,248,0.1); }
+.btn.danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
+.btn.danger:hover { background: rgba(248,113,113,0.1); }
+.btn.small { padding: 5px 10px; font-size: 0.7rem; }
+
+/* ── Calendar Range Selection ──────────────────────────────────── */
+.calendar-grid td.range-start {
+  box-shadow: inset 0 0 0 3px var(--accent);
+  background: rgba(56,189,248,0.35) !important;
+}
+.calendar-grid td.range-end {
+  box-shadow: inset 0 0 0 3px var(--accent);
+  background: rgba(56,189,248,0.35) !important;
+}
+.calendar-grid td.range-inner {
+  background: rgba(56,189,248,0.15) !important;
+}
+.calendar-grid td.preview-range {
+  background: rgba(56,189,248,0.12) !important;
+}
+.selection-indicator {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; background: rgba(56,189,248,0.1);
+  border-bottom: 1px solid var(--border); font-size: 0.78rem;
+  color: var(--accent); gap: 8px;
+}
+.selection-indicator .btn-clear-selection {
+  padding: 2px 8px; background: transparent; border: none;
+  color: var(--text-dim); cursor: pointer; font-size: 1rem;
+  line-height: 1; font-family: var(--font);
+}
+
+/* ── Reservation Cards ─────────────────────────────────────────── */
+.reservation-card-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+.reservation-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; transition: border-color 0.15s;
+}
+.reservation-card:hover { border-color: var(--accent); }
+.reservation-card .rc-info { flex: 1; min-width: 0; }
+.reservation-card .rc-villa { font-weight: 600; color: var(--accent); font-size: 0.85rem; }
+.reservation-card .rc-dates { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; }
+.reservation-card .rc-passenger { font-size: 0.75rem; color: var(--text); margin-top: 2px; }
+.reservation-card .rc-extras { font-size: 0.65rem; color: var(--orange); margin-top: 2px; }
+.reservation-card .rc-notes { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; font-style: italic; }
+.reservation-card .rc-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
 /* ── Responsive: Tablet ───────────────────────────────────────── */
 @media (max-width: 900px) {
@@ -402,9 +510,17 @@ body {
   .sidebar-tabs button { font-size: 0.65rem; padding: 8px 4px; }
   .bottom-nav button { font-size: 0.6rem; padding: 6px 2px; }
   .bottom-nav button .nav-icon { font-size: 1.1rem; }
-  .manual-res-toggle { padding: 10px 16px; font-size: 0.75rem; }
   .multi-select-btn { font-size: 0.8rem; padding: 8px 10px; }
   .multi-select-dropdown label { padding: 8px 10px; font-size: 0.75rem; }
+
+  /* Mobile: modals */
+  .modal-card { width: 100%; max-width: 100%; max-height: 100vh; border-radius: 0; }
+  .modal-card.modal-wide { max-width: 100%; }
+  .modal-header { padding: 12px 16px; }
+  .modal-body { padding: 16px; }
+  .form-row { flex-direction: column; gap: 0; }
+  .action-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .upload-btn { justify-content: center; }
 }
 </style>
 </head>
@@ -449,26 +565,6 @@ body {
         </div>
         <button type="submit">Search Availability</button>
       </form>
-
-      <!-- Manual Reservation Form -->
-      <div class="manual-res-section" id="manualResSection">
-        <button type="button" class="manual-res-toggle" onclick="toggleManualResForm()">
-          <span>📝 Manual Reservations</span>
-          <span class="arrow" id="manualResArrow">▸</span>
-        </button>
-        <div class="manual-res-body" id="manualResBody" style="display:none">
-          <select id="mrVilla" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.8rem;margin-bottom:6px"></select>
-          <div class="row" style="gap:6px;margin-bottom:6px">
-            <input type="date" id="mrStart" placeholder="Start" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.75rem">
-            <input type="date" id="mrEnd" placeholder="End" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.75rem">
-          </div>
-          <input type="text" id="mrPassenger" placeholder="Passenger name" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.8rem;margin-bottom:6px">
-          <input type="text" id="mrExtras" placeholder="Extras (comma-separated)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.8rem;margin-bottom:6px">
-          <button type="button" onclick="addManualReservation()" style="width:100%;padding:10px;background:var(--accent);color:#0f172a;border:none;border-radius:var(--radius);font-weight:700;cursor:pointer;font-family:var(--font)">Add Reservation</button>
-          <div id="mrStatus" style="font-size:0.7rem;margin-top:6px"></div>
-          <div class="manual-res-list" id="manualResList" style="margin-top:8px;max-height:200px;overflow-y:auto"></div>
-        </div>
-      </div>
     </div>
 
     <!-- Durum Tab Content - Shows in sidebar on desktop, main on mobile -->
@@ -489,6 +585,20 @@ body {
 
   <!-- ── Main Content ────────────────────────────────────────── -->
   <main class="main" id="mainContent">
+    <!-- Action Bar -->
+    <div class="action-bar" id="actionBar">
+      <div class="file-upload-widget">
+        <label class="upload-btn" for="snapshotFileInput">
+          <span class="upload-icon">📁</span> Upload Report
+        </label>
+        <input type="file" id="snapshotFileInput" accept=".xlsx" onchange="handleFileUpload(this)" hidden>
+        <span class="upload-status" id="uploadStatus"></span>
+      </div>
+      <button class="btn secondary" onclick="openManualResManager()">
+        📝 Manage Manual Reservations
+      </button>
+    </div>
+
     <!-- Stats Bar -->
     <div class="stats-bar" id="statsBar"></div>
 
@@ -508,6 +618,10 @@ body {
         </select>
         <input type="number" id="yearInput" value="2026" min="2020" max="2030" style="width:70px" onchange="loadCalendar()">
         <button onclick="navCalendar(1)">▶</button>
+      </div>
+      <div class="selection-indicator" id="selectionIndicator" style="display:none">
+        <span id="selectionText"></span>
+        <button class="btn-clear-selection" onclick="clearCalendarSelection()" title="Cancel selection">✕</button>
       </div>
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
@@ -554,6 +668,67 @@ body {
 
 <div class="tooltip" id="tooltip"></div>
 
+<!-- Reservation Create/Edit Modal -->
+<div class="modal-overlay" id="reservationModal" style="display:none" onclick="if(event.target===this)closeReservationModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="reservationModalTitle">📝 New Manual Reservation</h3>
+      <button class="modal-close" onclick="closeReservationModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Villa</label>
+        <select id="modalVilla" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.85rem;font-family:var(--font)"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Check-in</label>
+          <input type="date" id="modalStart">
+        </div>
+        <div class="form-group">
+          <label>Check-out</label>
+          <input type="date" id="modalEnd">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Passenger Name</label>
+        <input type="text" id="modalPassenger" placeholder="Guest name">
+      </div>
+      <div class="form-group">
+        <label>Extras</label>
+        <input type="text" id="modalExtras" placeholder="e.g. Pool Heating, Airport Transfer">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="modalNotes" rows="2" placeholder="Optional notes..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" onclick="closeReservationModal()">Cancel</button>
+        <button class="btn primary" onclick="submitReservationFromModal()">Save Reservation</button>
+      </div>
+      <div class="modal-status" id="modalStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Manual Reservation Manager Modal -->
+<div class="modal-overlay" id="managerModal" style="display:none" onclick="if(event.target===this)closeManagerModal()">
+  <div class="modal-card modal-wide">
+    <div class="modal-header">
+      <h3>📝 Manage Manual Reservations <span class="badge" id="managerCount">0</span></h3>
+      <button class="modal-close" onclick="closeManagerModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <button class="btn secondary" onclick="openReservationModalFromManager()" style="margin-bottom:16px">
+        + Add New Reservation
+      </button>
+      <div class="reservation-card-list" id="reservationCardList">
+        <div style="color:var(--text-dim);text-align:center;padding:24px">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── State ─────────────────────────────────────────────────────
 let state = {
@@ -564,6 +739,10 @@ let state = {
   lastSearch: null,
   manualReservations: [],
   activeTab: 'search',
+  selectionStart: null,
+  selectionEnd: null,
+  selectionVilla: null,
+  editingIndex: null,
 };
 
 // ── Init ──────────────────────────────────────────────────────
@@ -571,6 +750,7 @@ async function init() {
   await loadVillas();
   await loadStats();
   await loadTags();
+  populateModalVillaDropdown();
   document.getElementById('searchForm').addEventListener('submit', handleSearch);
   // Set default dates
   const today = new Date();
@@ -580,6 +760,14 @@ async function init() {
   document.getElementById('checkOut').value = nextWeek.toISOString().slice(0,10);
   document.getElementById('yearInput').value = state.currentYear;
   document.getElementById('monthSelect').value = state.currentMonth;
+  // Escape key to close modals and clear selection
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      clearCalendarSelection();
+      closeReservationModal();
+      closeManagerModal();
+    }
+  });
   // Show initial calendar
   switchTab('search');
 }
@@ -588,6 +776,7 @@ init();
 // ── Tab Switching ─────────────────────────────────────────────
 function switchTab(tab) {
   state.activeTab = tab;
+  if (tab !== 'calendar') clearCalendarSelection();
   // Sidebar tabs
   document.querySelectorAll('.sidebar-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   // Tab content in sidebar
@@ -756,14 +945,10 @@ function renderVillaList() {
 
 function populateVillaSelect() {
   const sel = document.getElementById('villaSelect');
-  const mrSel = document.getElementById('mrVilla');
   const opts = state.villas.map(v =>
     `<option value="${v.name}" ${v.name === state.currentVilla ? 'selected' : ''}>${v.name}</option>`
   ).join('');
   sel.innerHTML = opts;
-  if (mrSel) mrSel.innerHTML = '<option value="">Select villa...</option>' + state.villas.map(v =>
-    `<option value="${v.name}">${v.name}</option>`
-  ).join('');
   if (state.currentVilla === '' && state.villas.length > 0) {
     state.currentVilla = state.villas[0].name;
     sel.value = state.currentVilla;
@@ -902,6 +1087,7 @@ function navCalendar(dir) {
   state.currentYear = y;
   document.getElementById('monthSelect').value = m;
   document.getElementById('yearInput').value = y;
+  clearCalendarSelection();
   loadCalendar();
 }
 
@@ -946,9 +1132,14 @@ function renderCalendar(data) {
         inlineStyle = `style="--t-out-color:${outC};--t-in-color:${inC}"`;
       }
 
+      const cellId = day.date ? `cell-${day.date}` : '';
       html += `<td class="${classes}" ${dateStr} ${occData} ${inlineStyle}
-                    onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"
-                    ontouchstart="showTooltip(event, this)" ontouchend="hideTooltip()">`;
+                    id="${cellId}"
+                    onclick="onCalendarCellClick(event, this)"
+                    onmouseenter="showTooltip(event, this); onCellHover(event, this)"
+                    onmouseleave="hideTooltip(); onCellHoverEnd()"
+                    ontouchstart="showTooltip(event, this)"
+                    ontouchend="hideTooltip()">`;
       if (!day.is_padding) {
         html += `<div class="day-num">${day.day}</div>`;
         if (day.is_turnover) {
@@ -1142,79 +1333,330 @@ function formatDate(iso) {
   return `${d}/${m}/${y.slice(2)}`;
 }
 
-// ── Manual Reservations ──────────────────────────────────────
-function toggleManualResForm() {
-  const body = document.getElementById('manualResBody');
-  const btn = document.querySelector('.manual-res-toggle');
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  btn.className = 'manual-res-toggle' + (open ? '' : ' open');
-  if (!open) loadManualReservations();
+// ── Calendar Date-Range Selection ──────────────────────────────
+
+function onCalendarCellClick(e, cell) {
+  if (cell.classList.contains('padding')) return;
+  const dateStr = cell.getAttribute('data-date');
+  if (!dateStr) return;
+  const currentVilla = state.currentVilla;
+
+  if (state.selectionVilla && state.selectionVilla !== currentVilla) {
+    clearCalendarSelection();
+  }
+
+  if (state.selectionStart === null) {
+    state.selectionStart = dateStr;
+    state.selectionEnd = null;
+    state.selectionVilla = currentVilla;
+    showSelectionIndicator(dateStr);
+    applyRangeHighlights();
+  } else if (state.selectionEnd === null) {
+    if (dateStr === state.selectionStart) { clearCalendarSelection(); return; }
+    if (dateStr < state.selectionStart) {
+      state.selectionEnd = state.selectionStart;
+      state.selectionStart = dateStr;
+    } else {
+      state.selectionEnd = dateStr;
+    }
+    applyRangeHighlights();
+    setTimeout(() => {
+      openReservationModal(state.selectionVilla, state.selectionStart, state.selectionEnd);
+    }, 150);
+  } else {
+    clearCalendarSelection();
+    state.selectionStart = dateStr;
+    state.selectionEnd = null;
+    state.selectionVilla = currentVilla;
+    showSelectionIndicator(dateStr);
+    applyRangeHighlights();
+  }
 }
 
-async function loadManualReservations() {
+function onCellHover(e, cell) {
+  if (state.selectionStart === null || state.selectionEnd !== null) return;
+  const dateStr = cell.getAttribute('data-date');
+  if (!dateStr) return;
+  applyPreviewRange(dateStr);
+}
+
+function onCellHoverEnd() {
+  document.querySelectorAll('.calendar-grid td.preview-range').forEach(td => {
+    td.classList.remove('preview-range');
+  });
+}
+
+function applyRangeHighlights() {
+  document.querySelectorAll('.calendar-grid td.range-start, .calendar-grid td.range-end, .calendar-grid td.range-inner, .calendar-grid td.preview-range').forEach(td => {
+    td.classList.remove('range-start', 'range-end', 'range-inner', 'preview-range');
+  });
+  if (!state.selectionStart) return;
+  if (state.selectionStart && state.selectionEnd) {
+    document.querySelectorAll('.calendar-grid td[data-date]').forEach(td => {
+      const d = td.getAttribute('data-date');
+      if (!d) return;
+      if (d === state.selectionStart) td.classList.add('range-start');
+      else if (d === state.selectionEnd) td.classList.add('range-end');
+      else if (d > state.selectionStart && d < state.selectionEnd) td.classList.add('range-inner');
+    });
+  } else if (state.selectionStart && !state.selectionEnd) {
+    document.querySelectorAll('.calendar-grid td[data-date]').forEach(td => {
+      if (td.getAttribute('data-date') === state.selectionStart) td.classList.add('range-start');
+    });
+  }
+}
+
+function applyPreviewRange(hoverDate) {
+  document.querySelectorAll('.calendar-grid td.preview-range').forEach(td => td.classList.remove('preview-range'));
+  if (!state.selectionStart || !hoverDate) return;
+  const rangeStart = state.selectionStart < hoverDate ? state.selectionStart : hoverDate;
+  const rangeEnd = state.selectionStart < hoverDate ? hoverDate : state.selectionStart;
+  document.querySelectorAll('.calendar-grid td[data-date]').forEach(td => {
+    const d = td.getAttribute('data-date');
+    if (!d) return;
+    if (d > rangeStart && d < rangeEnd) td.classList.add('preview-range');
+    if (d === rangeEnd && d !== state.selectionStart) td.classList.add('preview-range');
+  });
+}
+
+function showSelectionIndicator(startDate) {
+  const ind = document.getElementById('selectionIndicator');
+  const text = document.getElementById('selectionText');
+  ind.style.display = 'flex';
+  text.textContent = `Selection: ${formatDate(startDate)} — tap another date to complete`;
+}
+
+function clearCalendarSelection() {
+  state.selectionStart = null;
+  state.selectionEnd = null;
+  state.selectionVilla = null;
+  document.getElementById('selectionIndicator').style.display = 'none';
+  document.querySelectorAll('.calendar-grid td.range-start, .calendar-grid td.range-end, .calendar-grid td.range-inner, .calendar-grid td.preview-range').forEach(td => {
+    td.classList.remove('range-start', 'range-end', 'range-inner', 'preview-range');
+  });
+}
+
+// ── Reservation Modal ──────────────────────────────────────────
+
+function populateModalVillaDropdown() {
+  const sel = document.getElementById('modalVilla');
+  if (!sel) return;
+  sel.innerHTML = state.villas.map(v =>
+    `<option value="${v.name}">${v.name}</option>`
+  ).join('');
+}
+
+function openReservationModal(villa, startDate, endDate) {
+  populateModalVillaDropdown();
+  document.getElementById('modalVilla').value = villa;
+  document.getElementById('modalStart').value = startDate;
+  document.getElementById('modalEnd').value = endDate;
+  document.getElementById('modalPassenger').value = '';
+  document.getElementById('modalExtras').value = '';
+  document.getElementById('modalNotes').value = '';
+  document.getElementById('modalStatus').textContent = '';
+  document.getElementById('reservationModalTitle').textContent = '📝 New Manual Reservation';
+  state.editingIndex = null;
+  document.getElementById('reservationModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('modalPassenger').focus(), 250);
+}
+
+function openReservationModalFromManager() {
+  populateModalVillaDropdown();
+  document.getElementById('modalStart').value = '';
+  document.getElementById('modalEnd').value = '';
+  document.getElementById('modalPassenger').value = '';
+  document.getElementById('modalExtras').value = '';
+  document.getElementById('modalNotes').value = '';
+  document.getElementById('modalStatus').textContent = '';
+  document.getElementById('reservationModalTitle').textContent = '📝 New Manual Reservation';
+  state.editingIndex = null;
+  document.getElementById('reservationModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('modalPassenger').focus(), 250);
+}
+
+function closeReservationModal() {
+  document.getElementById('reservationModal').style.display = 'none';
+  document.body.style.overflow = '';
+  clearCalendarSelection();
+  state.editingIndex = null;
+}
+
+async function submitReservationFromModal() {
+  const villa = document.getElementById('modalVilla').value;
+  const start = document.getElementById('modalStart').value;
+  const end = document.getElementById('modalEnd').value;
+  const passenger = document.getElementById('modalPassenger').value;
+  const extras = document.getElementById('modalExtras').value;
+  const notes = document.getElementById('modalNotes').value;
+  const status = document.getElementById('modalStatus');
+
+  if (!villa || !start || !end) {
+    status.textContent = '⚠ Villa, check-in, and check-out are required.';
+    status.style.color = 'var(--red)';
+    return;
+  }
+
+  const params = new URLSearchParams({ villa, start, end, passenger, extras, notes });
+  const method = state.editingIndex !== null ? 'PUT' : 'POST';
+  const url = state.editingIndex !== null
+    ? `/api/manual-reservations/${state.editingIndex}?${params}`
+    : `/api/manual-reservations?${params}`;
+
+  try {
+    const res = await fetch(url, { method });
+    if (!res.ok) {
+      const err = await res.json();
+      status.textContent = '⚠ ' + (err.error || 'Unknown error');
+      status.style.color = 'var(--red)';
+      return;
+    }
+    status.textContent = state.editingIndex !== null ? '✓ Updated — timelines rebuilt' : '✓ Added — timelines rebuilt';
+    status.style.color = 'var(--green)';
+    await loadVillas();
+    await loadStats();
+    if (state.currentVilla === villa) loadCalendar();
+    setTimeout(() => closeReservationModal(), 1200);
+  } catch(e) {
+    status.textContent = '⚠ Network error. Please try again.';
+    status.style.color = 'var(--red)';
+  }
+}
+
+// ── Manual Reservation Manager ─────────────────────────────────
+
+async function openManualResManager() {
+  document.getElementById('managerModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  await loadAndRenderManagerCards();
+}
+
+function closeManagerModal() {
+  document.getElementById('managerModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+async function loadAndRenderManagerCards() {
   try {
     const res = await fetch('/api/manual-reservations');
     const data = await res.json();
     state.manualReservations = data.reservations || [];
-    renderManualResList();
-  } catch(e) { console.error('Manual res load failed:', e); }
+    document.getElementById('managerCount').textContent = state.manualReservations.length;
+    renderManagerCards();
+  } catch(e) {
+    document.getElementById('reservationCardList').innerHTML =
+      '<div style="color:var(--red);text-align:center;padding:24px">Failed to load reservations.</div>';
+  }
 }
 
-function renderManualResList() {
-  const el = document.getElementById('manualResList');
+function renderManagerCards() {
+  const el = document.getElementById('reservationCardList');
   if (state.manualReservations.length === 0) {
-    el.innerHTML = '<div style="font-size:0.7rem;color:var(--text-muted);padding:8px 0">No manual reservations yet</div>';
+    el.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:24px">No manual reservations yet. Click "+ Add New Reservation" above to create one.</div>';
     return;
   }
   el.innerHTML = state.manualReservations.map((r, i) => `
-    <div class="manual-res-item">
-      <div>
-        <span class="mr-villa">${r.villa}</span>
-        <span class="mr-dates">${formatDate(r.start)} → ${formatDate(r.end)}</span>
-        ${r.passenger ? `<span style="color:var(--text-dim)"> — ${r.passenger}</span>` : ''}
-        ${r.extras ? `<br><span style="color:var(--orange);font-size:0.65rem">${r.extras}</span>` : ''}
+    <div class="reservation-card" id="res-card-${i}">
+      <div class="rc-info">
+        <div class="rc-villa">${r.villa}</div>
+        <div class="rc-dates">${formatDate(r.start)} → ${formatDate(r.end)}</div>
+        ${r.passenger ? `<div class="rc-passenger">👤 ${r.passenger}</div>` : ''}
+        ${r.extras ? `<div class="rc-extras">📦 ${r.extras}</div>` : ''}
+        ${r.notes ? `<div class="rc-notes">${r.notes}</div>` : ''}
       </div>
-      <span class="mr-del" onclick="deleteManualReservation(${i})" title="Delete">✕</span>
+      <div class="rc-actions">
+        <button class="btn small secondary" onclick="startEditReservation(${i})" title="Edit">✎</button>
+        <button class="btn small danger" onclick="confirmDeleteReservation(${i})" title="Delete">✕</button>
+      </div>
     </div>`).join('');
 }
 
-async function addManualReservation() {
-  const villa = document.getElementById('mrVilla').value;
-  const start = document.getElementById('mrStart').value;
-  const end = document.getElementById('mrEnd').value;
-  const passenger = document.getElementById('mrPassenger').value;
-  const extras = document.getElementById('mrExtras').value;
-  const status = document.getElementById('mrStatus');
-
-  if (!villa || !start || !end) { status.textContent = '⚠ Villa and dates required'; status.style.color = 'var(--red)'; return; }
-
-  try {
-    const params = new URLSearchParams({ villa, start, end, passenger, extras });
-    const res = await fetch('/api/manual-reservations?' + params, { method: 'POST' });
-    if (!res.ok) { const err = await res.json(); status.textContent = '⚠ ' + err.error; status.style.color = 'var(--red)'; return; }
-    status.textContent = '✓ Added — timelines rebuilt';
-    status.style.color = 'var(--green)';
-    document.getElementById('mrStart').value = '';
-    document.getElementById('mrEnd').value = '';
-    document.getElementById('mrPassenger').value = '';
-    document.getElementById('mrExtras').value = '';
-    await loadManualReservations();
-    await loadVillas();
-    if (state.currentVilla === villa) loadCalendar();
-    setTimeout(() => { status.textContent = ''; }, 4000);
-  } catch(e) { status.textContent = '⚠ Failed'; status.style.color = 'var(--red)'; }
+function startEditReservation(index) {
+  const r = state.manualReservations[index];
+  if (!r) return;
+  closeManagerModal();
+  populateModalVillaDropdown();
+  document.getElementById('modalVilla').value = r.villa;
+  document.getElementById('modalStart').value = r.start;
+  document.getElementById('modalEnd').value = r.end;
+  document.getElementById('modalPassenger').value = r.passenger || '';
+  document.getElementById('modalExtras').value = r.extras || '';
+  document.getElementById('modalNotes').value = r.notes || '';
+  document.getElementById('modalStatus').textContent = '';
+  document.getElementById('reservationModalTitle').textContent = '📝 Edit Manual Reservation';
+  state.editingIndex = index;
+  document.getElementById('reservationModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
-async function deleteManualReservation(index) {
-  if (!confirm('Delete this manual reservation?')) return;
+function confirmDeleteReservation(index) {
+  const r = state.manualReservations[index];
+  if (!r) return;
+  const card = document.getElementById('res-card-' + index);
+  if (!card) return;
+  card.innerHTML = `
+    <div style="flex:1;font-size:0.8rem;color:var(--red)">
+      Delete reservation for <strong>${r.villa}</strong> (${formatDate(r.start)}→${formatDate(r.end)})?
+    </div>
+    <div class="rc-actions">
+      <button class="btn small secondary" onclick="renderManagerCards()">No</button>
+      <button class="btn small danger" onclick="executeDeleteReservation(${index})">Yes, Delete</button>
+    </div>`;
+}
+
+async function executeDeleteReservation(index) {
   try {
     const res = await fetch('/api/manual-reservations/' + index, { method: 'DELETE' });
     if (!res.ok) return;
-    await loadManualReservations();
+    await loadAndRenderManagerCards();
     await loadVillas();
-    loadCalendar();
+    if (state.currentVilla) loadCalendar();
+    await loadStats();
   } catch(e) { console.error('Delete failed:', e); }
+}
+
+// ── File Upload ────────────────────────────────────────────────
+
+async function handleFileUpload(input) {
+  const file = input.files[0];
+  const status = document.getElementById('uploadStatus');
+  if (!file) return;
+
+  if (!file.name.toLowerCase().endsWith('.xlsx')) {
+    status.textContent = 'Only .xlsx files are accepted.';
+    status.className = 'upload-status error';
+    input.value = '';
+    setTimeout(() => { status.textContent = ''; status.className = 'upload-status'; }, 4000);
+    return;
+  }
+
+  status.textContent = 'Uploading...';
+  status.className = 'upload-status';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/upload-snapshot', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (res.ok && data.status === 'ok') {
+      status.textContent = `Uploaded: ${data.filename} (${data.snapshots} snapshots, ${data.records} records)`;
+      status.className = 'upload-status success';
+      await loadVillas();
+      await loadStats();
+      if (state.currentVilla) loadCalendar();
+    } else {
+      status.textContent = 'Error: ' + (data.message || 'Upload failed');
+      status.className = 'upload-status error';
+    }
+  } catch(e) {
+    status.textContent = 'Network error. Please try again.';
+    status.className = 'upload-status error';
+  }
+  input.value = '';
+  setTimeout(() => { status.textContent = ''; status.className = 'upload-status'; }, 8000);
 }
 
 // ── Stats ─────────────────────────────────────────────────────

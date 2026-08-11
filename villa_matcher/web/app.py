@@ -5,12 +5,13 @@ and serves the single-page frontend.
 """
 
 import os
+import shutil
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, File, Query, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -637,6 +638,61 @@ def api_rebuild():
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
+@app.post("/api/upload-snapshot")
+async def upload_snapshot(file: UploadFile = File(...)):
+    """Upload a Resort Report .xlsx file to the snapshots directory and trigger rebuild."""
+    global _timelines, _snapshot_dates, _manual_records, _registry
+
+    if not file.filename or not file.filename.lower().endswith(".xlsx"):
+        return JSONResponse(
+            {"status": "error", "message": "Only .xlsx files are accepted."},
+            status_code=400,
+        )
+
+    snap_dir = _get_snapshots_dir()
+    os.makedirs(snap_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_name = f"uploaded_{timestamp}_{file.filename}"
+    dest_path = os.path.join(snap_dir, safe_name)
+
+    try:
+        with open(dest_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        return JSONResponse(
+            {"status": "error", "message": f"Failed to save file: {e}"},
+            status_code=500,
+        )
+
+    # Rebuild timelines
+    try:
+        _registry = load_villa_registry(_villas_json)
+    except FileNotFoundError:
+        _registry = None
+    try:
+        _manual_records = load_manual_reservations(_manual_reservations_json)
+    except Exception:
+        _manual_records = []
+
+    try:
+        _timelines, _snapshot_dates = build_occupancy_timelines(
+            snap_dir, manual_records=_manual_records
+        )
+        summary = get_occupancy_summary(_timelines)
+        return {
+            "status": "ok",
+            "filename": safe_name,
+            "snapshots": len(_snapshot_dates),
+            "records": summary["total_records"],
+        }
+    except Exception as e:
+        return JSONResponse(
+            {"status": "error", "message": f"Rebuild failed: {e}"},
+            status_code=500,
+        )
+
+
 # ── Manual Reservation Endpoints ─────────────────────────────────────────────
 
 @app.get("/api/manual-reservations")
@@ -732,6 +788,58 @@ def delete_manual_reservation(index: int):
         pass
 
     return {"status": "ok", "removed": removed, "total": len(existing)}
+
+
+@app.put("/api/manual-reservations/{index}")
+def update_manual_reservation(
+    index: int,
+    villa: str = Query(..., description="Villa name"),
+    start: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: str = Query(..., description="End date (YYYY-MM-DD)"),
+    passenger: str = Query("", description="Lead passenger name"),
+    extras: str = Query("", description="Extras (comma-separated)"),
+    notes: str = Query("", description="Free-text notes"),
+):
+    """Update an existing manual reservation by index and rebuild timelines."""
+    global _timelines, _snapshot_dates, _manual_records
+
+    from datetime import date as date_type
+    try:
+        ci = date_type.fromisoformat(start)
+        co = date_type.fromisoformat(end)
+    except ValueError:
+        return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD."}, status_code=400)
+
+    if ci >= co:
+        return JSONResponse({"error": "Check-in must be before check-out."}, status_code=400)
+
+    try:
+        existing = load_manual_reservations_raw(_manual_reservations_json)
+    except Exception:
+        return JSONResponse({"error": "No manual reservations file found."}, status_code=404)
+
+    if index < 0 or index >= len(existing):
+        return JSONResponse({"error": f"Index {index} out of range (0—{len(existing)-1})."}, status_code=404)
+
+    existing[index] = {
+        "villa": villa,
+        "start": start,
+        "end": end,
+        "passenger": passenger,
+        "extras": extras,
+        "notes": notes,
+    }
+    save_manual_reservations(_manual_reservations_json, existing)
+
+    try:
+        _manual_records = load_manual_reservations(_manual_reservations_json)
+        _timelines, _snapshot_dates = build_occupancy_timelines(
+            _snapshots_dir, manual_records=_manual_records
+        )
+    except Exception:
+        pass
+
+    return {"status": "ok", "entry": existing[index], "total": len(existing)}
 
 
 # ── Static frontend ──────────────────────────────────────────────────────────
