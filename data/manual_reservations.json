@@ -1,6 +1,6 @@
 [
   {
-    "villa": "Villa Sudem",
+    "villa": "Sudem",
     "start": "2026-07-01",
     "end": "2026-07-25",
     "passenger": "Occupied",
@@ -8,7 +8,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Sudem",
+    "villa": "Sudem",
     "start": "2026-07-29",
     "end": "2026-08-05",
     "passenger": "Occupied",
@@ -16,7 +16,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Sudem",
+    "villa": "Sudem",
     "start": "2026-08-09",
     "end": "2026-08-30",
     "passenger": "Occupied",
@@ -24,7 +24,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Sudem",
+    "villa": "Sudem",
     "start": "2026-09-07",
     "end": "2026-09-27",
     "passenger": "Occupied",
@@ -32,7 +32,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Sudem",
+    "villa": "Sudem",
     "start": "2026-10-26",
     "end": "2026-12-31",
     "passenger": "Occupied",
@@ -40,7 +40,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Eslem",
+    "villa": "Eslem",
     "start": "2026-07-01",
     "end": "2026-08-05",
     "passenger": "Occupied",
@@ -48,7 +48,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Eslem",
+    "villa": "Eslem",
     "start": "2026-08-09",
     "end": "2026-08-21",
     "passenger": "Occupied",
@@ -56,7 +56,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Eslem",
+    "villa": "Eslem",
     "start": "2026-09-07",
     "end": "2026-09-12",
     "passenger": "Occupied",
@@ -64,7 +64,7 @@
     "notes": "Blocked — not in available window"
   },
   {
-    "villa": "Villa Eslem",
+    "villa": "Eslem",
     "start": "2026-10-31",
     "end": "2026-12-31",
     "passenger": "Occupied",

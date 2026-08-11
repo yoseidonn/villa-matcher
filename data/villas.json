@@ -1,7 +1,9 @@
 {
   "Au Soleil": {
     "capacity": 10,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -11,7 +13,9 @@
   },
   "Bank One": {
     "capacity": 8,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -21,7 +25,9 @@
   },
   "Bank Two": {
     "capacity": 8,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -31,7 +37,9 @@
   },
   "Beverley Hills": {
     "capacity": 12,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -41,7 +49,9 @@
   },
   "Cornelia": {
     "capacity": 10,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -51,7 +61,9 @@
   },
   "Elia Sun": {
     "capacity": 10,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -61,7 +73,9 @@
   },
   "Escala Views": {
     "capacity": 12,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -71,7 +85,9 @@
   },
   "Good Vibes One": {
     "capacity": 2,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -81,7 +97,9 @@
   },
   "Good Vibes Two": {
     "capacity": 2,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -91,7 +109,9 @@
   },
   "Hazal": {
     "capacity": 6,
-    "locations": ["Fethiye"],
+    "locations": [
+      "Fethiye"
+    ],
     "area": "Ölüdeniz",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -101,7 +121,9 @@
   },
   "Julia": {
     "capacity": 12,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -111,7 +133,9 @@
   },
   "Maiden Asra": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -121,7 +145,9 @@
   },
   "Maiden Burcu": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -131,7 +157,9 @@
   },
   "Mara Sun": {
     "capacity": 10,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -141,7 +169,9 @@
   },
   "Marni": {
     "capacity": 12,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -151,7 +181,9 @@
   },
   "Max View": {
     "capacity": 12,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -161,7 +193,9 @@
   },
   "Morey": {
     "capacity": 8,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -171,7 +205,9 @@
   },
   "Olivella": {
     "capacity": 10,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -181,7 +217,9 @@
   },
   "Olivia": {
     "capacity": 8,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -191,7 +229,9 @@
   },
   "Ophelia Bir": {
     "capacity": 8,
-    "locations": ["Fethiye"],
+    "locations": [
+      "Fethiye"
+    ],
     "area": "Ölüdeniz",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -201,7 +241,9 @@
   },
   "Ophelia Dort": {
     "capacity": 6,
-    "locations": ["Fethiye"],
+    "locations": [
+      "Fethiye"
+    ],
     "area": "Ölüdeniz",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -211,7 +253,9 @@
   },
   "Ophelia Iki": {
     "capacity": 8,
-    "locations": ["Fethiye"],
+    "locations": [
+      "Fethiye"
+    ],
     "area": "Ölüdeniz",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -221,7 +265,9 @@
   },
   "Ophelia Trio": {
     "capacity": 6,
-    "locations": ["Fethiye"],
+    "locations": [
+      "Fethiye"
+    ],
     "area": "Ölüdeniz",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -231,7 +277,9 @@
   },
   "Overseas Views": {
     "capacity": 12,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -241,7 +289,9 @@
   },
   "Resital": {
     "capacity": 8,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -251,7 +301,9 @@
   },
   "Samira Four": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -261,7 +313,9 @@
   },
   "Samira One": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -271,7 +325,9 @@
   },
   "Samira Three": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -281,7 +337,9 @@
   },
   "Samira Two": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -291,7 +349,9 @@
   },
   "Tanyeli 1": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -301,7 +361,9 @@
   },
   "Tanyeli 2": {
     "capacity": 6,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -311,7 +373,9 @@
   },
   "Tigra": {
     "capacity": 8,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -321,7 +385,9 @@
   },
   "Tzia": {
     "capacity": 10,
-    "locations": ["Kalkan"],
+    "locations": [
+      "Kalkan"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -329,9 +395,12 @@
     "resital_url": "https://www.resitalvilla.com/villalar/villa-tzia",
     "solmar_url": ""
   },
-  "Villa Sudem": {
+  "Sudem": {
     "capacity": 4,
-    "locations": ["Kalkan", "Kördere"],
+    "locations": [
+      "Kalkan",
+      "Kördere"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,
@@ -339,9 +408,12 @@
     "resital_url": "https://www.resitalvilla.com/villalar/villa-sude",
     "solmar_url": ""
   },
-  "Villa Eslem": {
+  "Eslem": {
     "capacity": 9,
-    "locations": ["Kalkan", "Kördere"],
+    "locations": [
+      "Kalkan",
+      "Kördere"
+    ],
     "area": "",
     "bedrooms": 0,
     "bathrooms": 0,

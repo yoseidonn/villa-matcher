@@ -107,6 +107,12 @@ def _get_villa_name(row) -> str | None:
     """Extract villa name, stripping the 'Villa ' prefix and skipping 'Total' rows.
 
     Normalizes names like 'Villa Tigra' → 'Tigra' so they match the registry.
+
+    IMPORTANT: The naming convention across the entire project is WITHOUT "Villa "
+    prefix. The villa registry (villas.json), timeline keys, and manual reservations
+    MUST all use names without the "Villa " prefix. This function enforces that
+    convention for Excel data. If a new villa is added to the registry with
+    "Villa " in its name, the registry entry must be renamed to strip the prefix.
     """
     for col in ("Accomodation Name", "Accommodation Name"):
         val = row.get(col)
@@ -114,7 +120,7 @@ def _get_villa_name(row) -> str | None:
             name = str(val).strip()
             if "total" in name.lower():
                 return None
-            # Strip "Villa " prefix for consistent naming
+            # Strip "Villa " prefix — project-wide convention is no prefix
             if name.lower().startswith("villa "):
                 name = name[6:].strip()
             return name
