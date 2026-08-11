@@ -616,6 +616,68 @@ def api_total_report():
                     headers={"Content-Disposition": "attachment; filename=total_history.xlsx"})
 
 
+@app.get("/api/reports/gaps")
+def api_gaps_report(
+    start: str = Query(None, description="Range start (YYYY-MM-DD), default: today"),
+    end: str = Query(None, description="Range end (YYYY-MM-DD), default: today + 90 days"),
+):
+    """List available gaps (free intervals) per villa between a date range.
+
+    Returns plain text formatted as:
+        Villa Name
+        dd/mm/yy   dd/mm/yy
+        dd/mm/yy   dd/mm/yy
+    """
+    _ensure_loaded()
+    from datetime import timedelta
+
+    today = date.today()
+    try:
+        range_start = date.fromisoformat(start) if start else today
+        range_end = date.fromisoformat(end) if end else (today + timedelta(days=90))
+    except ValueError:
+        return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD."}, status_code=400)
+
+    if range_start >= range_end:
+        return JSONResponse({"error": "Start must be before end."}, status_code=400)
+
+    lines = []
+    for villa_name in sorted(_timelines.keys()):
+        timeline = _timelines[villa_name]
+        # Get blocking records that overlap the range
+        blocking = [
+            r for r in timeline.records
+            if r.is_blocking and r.overlaps(range_start, range_end)
+        ]
+        blocking.sort(key=lambda r: r.start_date)
+
+        # Find free gaps
+        gaps = []
+        cursor = range_start
+        for rec in blocking:
+            if rec.start_date > cursor:
+                gaps.append((cursor, rec.start_date))
+            if rec.end_date > cursor:
+                cursor = rec.end_date
+        if cursor < range_end:
+            gaps.append((cursor, range_end))
+
+        if not gaps:
+            continue  # No free gaps for this villa
+
+        lines.append(villa_name)
+        for g_start, g_end in gaps:
+            lines.append(f"{g_start.strftime('%d/%m/%Y')}   {g_end.strftime('%d/%m/%Y')}")
+        lines.append("")  # blank line between villas
+
+    from fastapi.responses import PlainTextResponse as PTR
+    if not lines:
+        return PTR("No available gaps found in the specified range.",
+                   media_type="text/plain; charset=utf-8")
+
+    return PTR("\n".join(lines), media_type="text/plain; charset=utf-8")
+
+
 @app.post("/api/rebuild")
 def api_rebuild():
     """Force rebuild of occupancy timelines from snapshots (called on new data)."""
