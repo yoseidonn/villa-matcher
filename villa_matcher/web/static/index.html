@@ -463,6 +463,19 @@ body {
 .reservation-card .rc-notes { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; font-style: italic; }
 .reservation-card .rc-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
+/* ── Report Links ──────────────────────────────────────────────── */
+.report-links { display: flex; flex-direction: column; gap: 6px; }
+.report-link {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); text-decoration: none;
+  transition: border-color 0.15s;
+}
+.report-link:hover { border-color: var(--accent); }
+.report-link .report-icon { font-size: 1.5rem; flex-shrink: 0; }
+.report-link strong { color: var(--accent); font-size: 0.85rem; }
+.report-link small { color: var(--text-dim); font-size: 0.7rem; }
+
 /* ── Responsive: Tablet ───────────────────────────────────────── */
 @media (max-width: 900px) {
   .app { flex-direction: column; }
@@ -595,8 +608,45 @@ body {
         <span class="upload-status" id="uploadStatus"></span>
       </div>
       <button class="btn secondary" onclick="openManualResManager()">
-        📝 Manage Manual Reservations
+        📝 Manual Reservations
       </button>
+      <button class="btn secondary" onclick="openReportsModal()">
+        📋 Reports
+      </button>
+    </div>
+
+    <!-- Reports Modal -->
+    <div class="modal-overlay" id="reportsModal" style="display:none" onclick="if(event.target===this)closeReportsModal()">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>📋 Download Reports</h3>
+          <button class="modal-close" onclick="closeReportsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="report-links">
+            <a class="report-link" href="/api/reports/weekly" target="_blank">
+              <span class="report-icon">📅</span>
+              <div><strong>Weekly Caretaker Report</strong><br><small>Villa assignments per caretaker</small></div>
+            </a>
+            <a class="report-link" href="/api/reports/ismet" target="_blank">
+              <span class="report-icon">📦</span>
+              <div><strong>İsmet Abi Report</strong><br><small>Welcome Pack + Pool Heating (.xlsx)</small></div>
+            </a>
+            <a class="report-link" href="/api/reports/hamdi" target="_blank">
+              <span class="report-icon">🏠</span>
+              <div><strong>Hamdi Abi Report</strong><br><small>Unassigned villas</small></div>
+            </a>
+            <a class="report-link" href="/api/reports/total" target="_blank">
+              <span class="report-icon">📊</span>
+              <div><strong>Total History Report</strong><br><small>All-time reservations (.xlsx)</small></div>
+            </a>
+            <a class="report-link" href="/api/reports/korsan" target="_blank">
+              <span class="report-icon">🗓</span>
+              <div><strong>Korsan Villas Calendar</strong><br><small>Calendar workbook (.xlsx)</small></div>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Stats Bar -->
@@ -766,6 +816,7 @@ async function init() {
       clearCalendarSelection();
       closeReservationModal();
       closeManagerModal();
+      closeReportsModal();
     }
   });
   // Show initial calendar
@@ -1535,6 +1586,18 @@ async function openManualResManager() {
 
 function closeManagerModal() {
   document.getElementById('managerModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── Reports Modal ──────────────────────────────────────────────
+
+function openReportsModal() {
+  document.getElementById('reportsModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReportsModal() {
+  document.getElementById('reportsModal').style.display = 'none';
   document.body.style.overflow = '';
 }
 
