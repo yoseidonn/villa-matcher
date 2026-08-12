@@ -584,8 +584,13 @@ def api_korsan_report():
     from villa_matcher.reports.file_utils import select_first_file_with_extension
 
     excel = select_first_file_with_extension(".xlsx", _snapshots_dir)
-    kv_json = "/home/yusuf/Masaüstü/Resital Villa Scripts/inputs/korsan_villas.json"
-    template = "/home/yusuf/Masaüstü/Resital Villa Scripts/Korsan-Villas-Template.xlsx"
+    data_dir = _get_data_dir()
+    kv_json = os.path.join(data_dir, "korsan_villas.json")
+    template = os.path.join(data_dir, "Korsan-Villas-Template.xlsx")
+    if not os.path.exists(kv_json):
+        kv_json = "/home/yusuf/Masaüstü/Resital Villa Scripts/inputs/korsan_villas.json"
+    if not os.path.exists(template):
+        template = "/home/yusuf/Masaüstü/Resital Villa Scripts/Korsan-Villas-Template.xlsx"
     if not excel or not os.path.exists(template):
         return JSONResponse({"error": "Missing Excel or template file"}, status_code=404)
 

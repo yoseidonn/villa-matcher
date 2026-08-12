@@ -748,7 +748,10 @@ body {
     <!-- Calendar View -->
     <div class="calendar-container" id="calendarContainer" style="display:none">
       <div class="calendar-header">
-        <button onclick="navCalendar(-1)">◀</button>
+        <div class="nav-btns">
+          <button onclick="navCalendar(-1)">◀</button>
+          <button onclick="navCalendar(1)">▶</button>
+        </div>
         <select id="villaSelect" onchange="loadCalendar()"></select>
         <h2 id="calendarTitle">July 2026</h2>
         <select id="monthSelect" onchange="loadCalendar()">
@@ -760,7 +763,6 @@ body {
           <option value="11">November</option><option value="12">December</option>
         </select>
         <input type="number" id="yearInput" value="2026" min="2020" max="2030" style="width:70px" onchange="loadCalendar()">
-        <button onclick="navCalendar(1)">▶</button>
       </div>
       <div class="selection-indicator" id="selectionIndicator" style="display:none">
         <span id="selectionText"></span>
