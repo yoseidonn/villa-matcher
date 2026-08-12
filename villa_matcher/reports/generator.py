@@ -12,7 +12,7 @@ import json
 import os
 import re
 import warnings
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import openpyxl
 import pandas as pd
@@ -102,6 +102,143 @@ def _format_date_columns(df, date_columns: dict):
             pass
 
 
+def _parse_date_dmy(date_str: str) -> datetime | None:
+    """Parse a dd/mm/yy date string. Returns None on failure."""
+    if not date_str or not isinstance(date_str, str):
+        return None
+    try:
+        return datetime.strptime(date_str.strip(), "%d/%m/%y")
+    except ValueError:
+        return None
+
+
+def _to_date(val) -> datetime | None:
+    """Coerce a value (Timestamp, datetime, or dd/mm/yy string) to a datetime."""
+    if val is None:
+        return None
+    if isinstance(val, pd.Timestamp):
+        return val.to_pydatetime()
+    if isinstance(val, datetime):
+        return val
+    if isinstance(val, str):
+        return _parse_date_dmy(val)
+    return None
+
+
+def _extract_snapshot_date(filename: str) -> date | None:
+    """Extract snapshot date from filename (e.g. ..._10-08-2026_unlocked.xlsx)."""
+    m = re.search(r"(\d{2})[-_.](\d{2})[-_.](\d{4})", filename)
+    if not m:
+        return None
+    try:
+        return date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+    except ValueError:
+        return None
+
+
+def _sorted_snapshots(folder: str) -> list[str]:
+    """List .xlsx snapshot filenames sorted chronologically by embedded date."""
+    files = [f for f in os.listdir(folder) if f.endswith(".xlsx")]
+
+    def _key(f: str) -> date:
+        d = _extract_snapshot_date(f)
+        return d if d is not None else date.min
+
+    return sorted(files, key=_key)
+
+
+def _find_overlaps(reservations: list[dict]) -> dict:
+    """Detect & deduplicate overlapping reservations per villa.
+
+    Returns a dict with:
+      - warnings: list of dicts describing each issue found
+      - clean_reservations: deduplicated reservation list
+
+    Dedup rule:
+      - Manual + Excel with EXACTLY the same dates → same reservation, the
+        manual copy is removed SILENTLY (no warning).
+      - Manual + Excel with DIFFERENT but overlapping dates → real conflict,
+        both kept and warned about.
+      - Both Excel or both manual overlapping → warned about.
+    """
+    # Group by villa name
+    by_villa: dict[str, list[dict]] = {}
+    for r in reservations:
+        name = r.get("Accomodation Name", "")
+        if name:
+            by_villa.setdefault(name, []).append(r)
+
+    warnings: list[dict] = []
+    to_remove: set[int] = set()   # id() of reservations to drop
+
+    for villa, villa_res in by_villa.items():
+        # Parse dates for every entry; skip those with unparseable dates
+        parsed: list[tuple[int, datetime, datetime, dict]] = []
+        for idx, r in enumerate(villa_res):
+            start = _parse_date_dmy(
+                r.get("Holiday Start Date") or r.get("Holiday Start Day", "")
+            )
+            end = _parse_date_dmy(r.get("Holiday End Date", ""))
+            if start is None or end is None:
+                continue
+            parsed.append((idx, start, end, r))
+
+        # Check every pair for overlap: [s1, e1) vs [s2, e2)
+        for a in range(len(parsed)):
+            for b in range(a + 1, len(parsed)):
+                _ia, s_a, e_a, r_a = parsed[a]
+                _ib, s_b, e_b, r_b = parsed[b]
+
+                if not (s_a < e_b and s_b < e_a):
+                    continue  # no overlap
+
+                is_manual_a = r_a.get("_manual", False)
+                is_manual_b = r_b.get("_manual", False)
+
+                s_a_str = r_a.get("Holiday Start Date") or r_a.get("Holiday Start Day", "")
+                e_a_str = r_a.get("Holiday End Date", "")
+                s_b_str = r_b.get("Holiday Start Date") or r_b.get("Holiday Start Day", "")
+                e_b_str = r_b.get("Holiday End Date", "")
+
+                if is_manual_a and not is_manual_b:
+                    # Manual a vs Excel b
+                    if s_a == s_b and e_a == e_b:
+                        # Exact same dates → same reservation, drop manual silently
+                        to_remove.add(id(r_a))
+                    else:
+                        # Different overlapping dates → real conflict
+                        warnings.append({
+                            "villa": villa,
+                            "type": "overlap_warning",
+                            "range1": f"{s_a_str} - {e_a_str}",
+                            "range2": f"{s_b_str} - {e_b_str}",
+                        })
+                elif is_manual_b and not is_manual_a:
+                    # Manual b vs Excel a
+                    if s_a == s_b and e_a == e_b:
+                        # Exact same dates → same reservation, drop manual silently
+                        to_remove.add(id(r_b))
+                    else:
+                        # Different overlapping dates → real conflict
+                        warnings.append({
+                            "villa": villa,
+                            "type": "overlap_warning",
+                            "range1": f"{s_a_str} - {e_a_str}",
+                            "range2": f"{s_b_str} - {e_b_str}",
+                        })
+                else:
+                    # Both Excel or both manual → genuine data conflict
+                    warnings.append({
+                        "villa": villa,
+                        "type": "overlap_warning",
+                        "range1": f"{s_a_str} - {e_a_str}",
+                        "range2": f"{s_b_str} - {e_b_str}",
+                    })
+
+    clean = [r for r in reservations if id(r) not in to_remove]
+    return {"warnings": warnings, "clean_reservations": clean}
+
+
 DATE_COLS = {
     "Holiday Start Date": "%d/%m/%y",
     "Holiday End Date": "%d/%m/%y",
@@ -139,6 +276,11 @@ def weekly_report(
     if manual_dicts:
         reservations = list(reservations) + manual_dicts
 
+    # Detect & deduplicate overlapping reservations
+    overlap_result = _find_overlaps(reservations)
+    reservations = overlap_result["clean_reservations"]
+    overlap_warnings = overlap_result["warnings"]
+
     reservations = sorted(
         reservations,
         key=lambda r: (
@@ -173,12 +315,33 @@ def weekly_report(
                     else:
                         extra += ")\n" if extra else "\n"
                     output += extra
-                    # Show notes for manual reservations
-                    if r.get("_manual") and r.get("_notes"):
-                        output += f"  [Not: {r['_notes']}]\n"
         ct["output"] = output
 
-    return "\n\n".join([ct["output"] for ct in caretakers])
+    body = "\n\n".join([ct["output"] for ct in caretakers])
+
+    # Prepend overlap / dedup warnings if any
+    if overlap_warnings:
+        warn_lines = ["⚠ UYARILAR", "─────────"]
+        seen = set()  # deduplicate warning messages
+        for w in overlap_warnings:
+            villa_short = w["villa"].replace("Villa ", "")
+            if w["type"] == "duplicate_removed":
+                msg = (
+                    f"🔁 {villa_short}: {w['removed']} manuel kaydı kaldırıldı "
+                    f"— Excel'de {w['kept']} zaten var"
+                )
+            else:
+                msg = (
+                    f"⚠ {villa_short}: {w['range1']} ile {w['range2']} "
+                    f"tarihleri çakışıyor!"
+                )
+            if msg not in seen:
+                seen.add(msg)
+                warn_lines.append(msg)
+        warn_lines.append("")  # blank line before body
+        return "\n".join(warn_lines) + "\n" + body
+
+    return body
 
 
 # ── İsmet Abi Report ────────────────────────────────────────────────────────
@@ -400,3 +563,491 @@ def korsan_villas_report(
                     ws.cell(row=row, column=col).border = thin_border
 
     return wb
+
+
+# ── New Reservations Report ──────────────────────────────────────────────────
+
+def new_reservations_report(
+    folder: str,
+    newer_path: str | None = None,
+    manual_reservations_path: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+) -> str:
+    """Find reservations new in the latest (or specified) snapshot.
+
+    Baseline = ALL previous snapshots + ALL manual reservations combined.
+    New = reservations in the target snapshot whose Opportunity Name is NOT
+          in the baseline.
+
+    Matching is by Opportunity Name (unique booking ID).
+    Optional date_from/date_to filter by Holiday Start Date (dd/mm/yy format).
+    """
+    import os as _os
+
+    # ── Identify the "new" snapshot ──────────────────────────────────────
+    all_files = _sorted_snapshots(folder)
+    if not all_files:
+        return "Snapshot dosyası bulunamadı."
+
+    if newer_path:
+        # User specified a particular file — use it as the "new" target
+        target_file = newer_path
+        # All OTHER files become the baseline
+        baseline_files = [
+            _os.path.join(folder, f)
+            for f in all_files
+            if _os.path.join(folder, f) != newer_path
+        ]
+    else:
+        # Default: latest file is "new", everything else is baseline
+        target_file = _os.path.join(folder, all_files[-1])
+        baseline_files = [
+            _os.path.join(folder, f) for f in all_files[:-1]
+        ]
+        if not baseline_files:
+            return "Karşılaştırma için en az 2 snapshot dosyası gerekiyor."
+
+    # ── Build baseline Opportunity Name set ──────────────────────────────
+    baseline_ids: set[int] = set()
+
+    # Load all previous snapshots
+    for bf in baseline_files:
+        try:
+            dfb = pd.read_excel(bf)
+            dfb.columns = [col.strip() for col in dfb.columns]
+            if "Opportunity Name" in dfb.columns:
+                for oid in dfb["Opportunity Name"].dropna():
+                    try:
+                        baseline_ids.add(int(oid))
+                    except (ValueError, TypeError):
+                        pass
+        except Exception:
+            continue  # skip corrupted/unreadable files
+
+    # Merge manual reservations into baseline
+    manual_dicts = _load_manual_reservations_as_dicts(manual_reservations_path)
+    for m in manual_dicts:
+        # Manual entries don't have Opportunity Name, but they represent
+        # known bookings. We mark them via a synthetic ID that won't match
+        # any real Opportunity Name. Instead, we compare by villa + date
+        # overlap: if a reservation in the target snapshot overlaps a manual
+        # entry for the same villa, it's NOT new.
+        pass  # handled below via overlap check
+
+    # ── Load the target snapshot ─────────────────────────────────────────
+    try:
+        df_new = pd.read_excel(target_file)
+    except Exception:
+        return f"Dosya okunamadı: {target_file}"
+
+    df_new.columns = [col.strip() for col in df_new.columns]
+
+    if "Opportunity Name" not in df_new.columns:
+        return "Sütun bulunamadı: Opportunity Name"
+
+    # Exclude "Total" summary rows early
+    if "Accomodation Name" in df_new.columns:
+        df_new = df_new[~df_new["Accomodation Name"].str.contains("Total", na=False)]
+
+    # Find new Opportunity Names (not in baseline snapshots)
+    new_opp = df_new["Opportunity Name"].fillna(-1).astype(int).values
+    new_mask = [oid not in baseline_ids and oid != -1 for oid in new_opp]
+    df_new_res = df_new[new_mask].copy()
+
+    # Also remove entries that EXACTLY match a manual reservation
+    # (same villa + same start + same end → pre-announced, not new)
+    if manual_dicts and len(df_new_res) > 0:
+        manual_by_villa: dict[str, list[dict]] = {}
+        for m in manual_dicts:
+            v = m.get("Accomodation Name", "")
+            if v:
+                manual_by_villa.setdefault(v, []).append(m)
+
+        if manual_by_villa:
+            drop_indices: list[int] = []
+            for idx, row in df_new_res.iterrows():
+                villa = str(row.get("Accomodation Name", ""))
+                if villa not in manual_by_villa:
+                    continue
+                row_start = _to_date(
+                    row.get("Holiday Start Date") or row.get("Holiday Start Day")
+                )
+                row_end = _to_date(row.get("Holiday End Date"))
+                if row_start is None or row_end is None:
+                    continue
+                for m in manual_by_villa.get(villa, []):
+                    m_start = _parse_date_dmy(m.get("Holiday Start Date", ""))
+                    m_end = _parse_date_dmy(m.get("Holiday End Date", ""))
+                    if m_start is None or m_end is None:
+                        continue
+                    # Exact same dates → same reservation, already known
+                    if row_start == m_start and row_end == m_end:
+                        drop_indices.append(idx)
+                        break
+            if drop_indices:
+                df_new_res = df_new_res.drop(index=drop_indices)
+
+    # ── Parse dates for filtering & output ───────────────────────────────
+    if "Holiday Start Date" in df_new_res.columns:
+        if not pd.api.types.is_datetime64_any_dtype(df_new_res["Holiday Start Date"]):
+            df_new_res["Holiday Start Date"] = pd.to_datetime(
+                df_new_res["Holiday Start Date"], errors="coerce"
+            )
+
+        # Apply date range filter
+        if date_from:
+            df_from = pd.to_datetime(date_from, format="%d/%m/%y", errors="coerce")
+            if pd.notna(df_from):
+                df_new_res = df_new_res[df_new_res["Holiday Start Date"] >= df_from]
+        if date_to:
+            df_to = pd.to_datetime(date_to, format="%d/%m/%y", errors="coerce")
+            if pd.notna(df_to):
+                df_new_res = df_new_res[df_new_res["Holiday Start Date"] <= df_to]
+
+        # Format dates for output
+        df_new_res["Holiday Start Date"] = df_new_res["Holiday Start Date"].dt.strftime("%d/%m/%y")
+
+    if "Holiday End Date" in df_new_res.columns:
+        if not pd.api.types.is_datetime64_any_dtype(df_new_res["Holiday End Date"]):
+            df_new_res["Holiday End Date"] = pd.to_datetime(
+                df_new_res["Holiday End Date"], errors="coerce"
+            )
+        df_new_res["Holiday End Date"] = df_new_res["Holiday End Date"].dt.strftime("%d/%m/%y")
+
+    # ── Sort ─────────────────────────────────────────────────────────────
+    sort_cols = []
+    if "Accomodation Name" in df_new_res.columns:
+        sort_cols.append("Accomodation Name")
+    if "Holiday Start Date" in df_new_res.columns:
+        df_new_res["__sort_date"] = pd.to_datetime(
+            df_new_res["Holiday Start Date"], format="%d/%m/%y", errors="coerce"
+        )
+        sort_cols.append("__sort_date")
+
+    if sort_cols:
+        df_new_res = df_new_res.sort_values(by=sort_cols, ascending=True)
+
+    # ── Build output ─────────────────────────────────────────────────────
+    lines = ["YENİ REZERVASYONLAR"]
+    snap_label = _os.path.basename(target_file)
+    lines.append(f"Hedef snapshot: {snap_label}")
+    lines.append(f"Baseline: {len(baseline_files)} önceki snapshot"
+                 + (f" + {len(manual_dicts)} manuel kayıt" if manual_dicts else ""))
+
+    if date_from or date_to:
+        range_str = f"{date_from or '…'} - {date_to or '…'}"
+        lines.append(f"Tarih aralığı: {range_str}")
+
+    lines.append(f"Toplam: {len(df_new_res)} yeni rezervasyon")
+    lines.append("")
+
+    if len(df_new_res) == 0:
+        lines.append("Yeni rezervasyon bulunamadı.")
+        return "\n".join(lines)
+
+    # Group by villa
+    if "Accomodation Name" in df_new_res.columns:
+        current_villa = None
+        for _, r in df_new_res.iterrows():
+            villa = str(r.get("Accomodation Name", ""))
+            if villa != current_villa:
+                current_villa = villa
+                clean = villa.replace("Villa ", "")
+                lines.append(clean)
+
+            start = r.get("Holiday Start Date", "")
+            end = r.get("Holiday End Date", "")
+            pax = str(r.get("Lead Passenger", "")) if pd.notna(r.get("Lead Passenger")) else ""
+            extras = str(r.get("ExtrasAggregated", "")) if pd.notna(r.get("ExtrasAggregated")) else ""
+
+            line = f"{start} - {end}"
+            if pax:
+                line += f"  {pax}"
+            extras_filtered = _filter_extras_text(extras)
+            if extras_filtered:
+                line += f"  ({extras_filtered})"
+
+            lines.append(line)
+        lines.append("")
+    else:
+        for _, r in df_new_res.iterrows():
+            lines.append(str(r.to_dict()))
+
+    return "\n".join(lines)
+
+
+# ── Change Detection Report ──────────────────────────────────────────────────
+
+def change_detection_report(
+    folder: str,
+    target_path: str | None = None,
+    manual_reservations_path: str | None = None,
+) -> dict:
+    """Detect new, deleted, and conflicting reservations between snapshots.
+
+    Three pools:
+      Pool 1 (baseline) = all snapshots EXCEPT target + all manual reservations
+      Pool 3 (target)   = the target snapshot (default: latest)
+
+    Returns a structured dict:
+      - new: reservations in target not in baseline
+      - deleted: reservations in baseline not in target whose dates suggest
+                 they should still be present (cancelled)
+      - conflicts: overlapping reservations within the target snapshot
+      - summary: counts
+    """
+    import os as _os
+
+    all_files = _sorted_snapshots(folder)
+    if not all_files:
+        return {"error": "Snapshot dosyası bulunamadı."}
+
+    # ── Determine target snapshot ────────────────────────────────────────
+    if target_path:
+        target_file = target_path
+        baseline_files = [
+            _os.path.join(folder, f)
+            for f in all_files
+            if _os.path.join(folder, f) != target_path
+        ]
+    else:
+        target_file = _os.path.join(folder, all_files[-1])
+        baseline_files = [_os.path.join(folder, f) for f in all_files[:-1]]
+
+    target_date = _extract_snapshot_date(_os.path.basename(target_file))
+
+    # ── Load target ──────────────────────────────────────────────────────
+    try:
+        df_t = pd.read_excel(target_file)
+    except Exception:
+        return {"error": f"Dosya okunamadı: {target_file}"}
+    df_t.columns = [col.strip() for col in df_t.columns]
+    if "Accomodation Name" in df_t.columns:
+        df_t = df_t[~df_t["Accomodation Name"].str.contains("Total", na=False)]
+
+    manual_dicts = _load_manual_reservations_as_dicts(manual_reservations_path)
+
+    # ── Build baseline (all previous snapshots) ──────────────────────────
+    # baseline[opp_name] = {villa, start, end, passenger, last_seen}
+    baseline: dict[int, dict] = {}
+    if "Opportunity Name" in df_t.columns:
+        for bf in baseline_files:
+            try:
+                dfb = pd.read_excel(bf)
+            except Exception:
+                continue
+            dfb.columns = [col.strip() for col in dfb.columns]
+            if "Opportunity Name" not in dfb.columns:
+                continue
+            if "Accomodation Name" in dfb.columns:
+                dfb = dfb[~dfb["Accomodation Name"].str.contains("Total", na=False)]
+            for _, r in dfb.iterrows():
+                try:
+                    opp = int(r["Opportunity Name"])
+                except (ValueError, TypeError):
+                    continue
+                # Keep the earliest start date seen (most complete info)
+                start = _to_date(r.get("Holiday Start Date"))
+                if opp in baseline:
+                    # keep earliest start (booking start doesn't change)
+                    if start and (baseline[opp]["start"] is None or start < baseline[opp]["start"]):
+                        baseline[opp]["start"] = start
+                    # last_seen = most recent file
+                    baseline[opp]["last_seen"] = _os.path.basename(bf)
+                    continue
+                baseline[opp] = {
+                    "villa": str(r.get("Accomodation Name", "") or ""),
+                    "start": start,
+                    "end": _to_date(r.get("Holiday End Date")),
+                    "passenger": str(r.get("Lead Passenger", "") or "") if pd.notna(r.get("Lead Passenger")) else "",
+                    "last_seen": _os.path.basename(bf),
+                }
+
+    # ── Target opportunity set ───────────────────────────────────────────
+    target_opps: set[int] = set()
+    if "Opportunity Name" in df_t.columns:
+        for oid in df_t["Opportunity Name"].dropna():
+            try:
+                target_opps.add(int(oid))
+            except (ValueError, TypeError):
+                pass
+
+    # ── NEW: in target, not in baseline ──────────────────────────────────
+    # Build manual exact-match set: (villa, start, end) tuples that mean
+    # the Excel row was pre-announced and is NOT new.
+    manual_exact: set[tuple] = set()
+    for m in manual_dicts:
+        ms = _parse_date_dmy(m.get("Holiday Start Date", ""))
+        me = _parse_date_dmy(m.get("Holiday End Date", ""))
+        if ms is not None and me is not None:
+            manual_exact.add((m.get("Accomodation Name", ""), ms, me))
+
+    new_list = []
+    if "Opportunity Name" in df_t.columns:
+        for _, r in df_t.iterrows():
+            try:
+                opp = int(r["Opportunity Name"])
+            except (ValueError, TypeError):
+                continue
+            if opp in baseline:
+                continue
+            villa = str(r.get("Accomodation Name", "") or "")
+            rs = _to_date(r.get("Holiday Start Date"))
+            re_ = _to_date(r.get("Holiday End Date"))
+            # Skip if a manual reservation has the exact same villa+dates
+            if rs is not None and re_ is not None and (villa, rs, re_) in manual_exact:
+                continue
+            new_list.append({
+                "villa": villa,
+                "start": _fmt_date(r.get("Holiday Start Date")),
+                "end": _fmt_date(r.get("Holiday End Date")),
+                "passenger": str(r.get("Lead Passenger", "") or "") if pd.notna(r.get("Lead Passenger")) else "",
+                "opportunity": opp,
+            })
+
+    # ── DELETED: in the SECOND-TO-LATEST snapshot, not in target ─────────
+    # Only compare the previous snapshot (not all history) so we surface
+    # only the LATEST cancellations.
+    # A snapshot dated X contains only reservations with start >= X.
+    deleted_list = []
+    prev_baseline: dict[int, dict] = {}
+    if len(all_files) >= 2:
+        prev_file = _os.path.join(folder, all_files[-2])
+        try:
+            dfp = pd.read_excel(prev_file)
+            dfp.columns = [col.strip() for col in dfp.columns]
+            if "Accomodation Name" in dfp.columns:
+                dfp = dfp[~dfp["Accomodation Name"].str.contains("Total", na=False)]
+            if "Opportunity Name" in dfp.columns:
+                for _, r in dfp.iterrows():
+                    try:
+                        opp = int(r["Opportunity Name"])
+                    except (ValueError, TypeError):
+                        continue
+                    prev_baseline[opp] = {
+                        "villa": str(r.get("Accomodation Name", "") or ""),
+                        "start": _to_date(r.get("Holiday Start Date")),
+                        "end": _to_date(r.get("Holiday End Date")),
+                        "passenger": str(r.get("Lead Passenger", "") or "") if pd.notna(r.get("Lead Passenger")) else "",
+                        "last_seen": _os.path.basename(prev_file),
+                    }
+        except Exception:
+            pass
+
+    if target_date:
+        for opp, info in prev_baseline.items():
+            if opp in target_opps:
+                continue
+            start = info.get("start")
+            # Expected in target if it starts on/after the snapshot date
+            if start is not None and start >= datetime.combine(target_date, datetime.min.time()):
+                deleted_list.append({
+                    "villa": info["villa"],
+                    "start": _fmt_date(start),
+                    "end": _fmt_date(info.get("end")),
+                    "passenger": info.get("passenger", ""),
+                    "opportunity": opp,
+                    "last_seen_in": info.get("last_seen", ""),
+                })
+
+    # ── CONFLICTS: overlapping reservations within the target ────────────
+    conflict_list = []
+    if "Opportunity Name" in df_t.columns:
+        target_rows = [
+            {
+                "Accomodation Name": str(r.get("Accomodation Name", "") or ""),
+                "Holiday Start Date": _fmt_date(r.get("Holiday Start Date")),
+                "Holiday End Date": _fmt_date(r.get("Holiday End Date")),
+            }
+            for _, r in df_t.iterrows()
+        ]
+        overlap_result = _find_overlaps(target_rows)
+        for w in overlap_result["warnings"]:
+            if w["type"] == "overlap_warning":
+                conflict_list.append({
+                    "villa": w["villa"],
+                    "range1": w["range1"],
+                    "range2": w["range2"],
+                })
+
+    # ── Summary ──────────────────────────────────────────────────────────
+    summary = {
+        "new_count": len(new_list),
+        "deleted_count": len(deleted_list),
+        "conflict_count": len(conflict_list),
+    }
+
+    return {
+        "target_file": _os.path.basename(target_file),
+        "target_date": target_date.isoformat() if target_date else None,
+        "baseline_snapshot_count": len(baseline_files),
+        "manual_count": len(manual_dicts),
+        "new": new_list,
+        "deleted": deleted_list,
+        "conflicts": conflict_list,
+        "summary": summary,
+    }
+
+
+def _fmt_date(val) -> str:
+    """Format a date value (Timestamp/datetime/str) as dd/mm/yy string."""
+    dt = _to_date(val)
+    if dt is None:
+        return str(val) if val is not None else ""
+    return dt.strftime("%d/%m/%y")
+
+
+# ── Korsan Check-ins Report ─────────────────────────────────────────────────
+
+def korsan_checkins_report(
+    korsan_villas_json: str,
+    timelines: dict,
+    from_date: date | None = None,
+    days: int = 10,
+) -> str:
+    """List upcoming check-ins (arrival dates) for each Korsan villa.
+
+    Window = [from_date, from_date + days], where from_date defaults to
+    today - 1 day (yesterday). For each Korsan villa, lists every reservation
+    whose start_date (check-in) falls in the window.
+    """
+    if from_date is None:
+        from_date = date.today() - timedelta(days=1)
+
+    end_date = from_date + timedelta(days=days)
+
+    # Load Korsan villa short names
+    try:
+        with open(korsan_villas_json, "r", encoding="utf-8") as f:
+            villa_names = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return "Korsan villa listesi bulunamadı."
+
+    lines = ["KORSAN CHECK-IN'LER"]
+    lines.append(f"{from_date.strftime('%d/%m/%y')} - {end_date.strftime('%d/%m/%y')}")
+    lines.append("")
+
+    for short in villa_names:
+        # Timeline keys may be short ("Au Soleil") or prefixed ("Villa Au Soleil")
+        timeline = timelines.get(short) or timelines.get(f"Villa {short}")
+
+        # Collect check-ins (start_date) within the window
+        checkins = []
+        if timeline is not None:
+            for r in timeline.records:
+                if from_date <= r.start_date <= end_date:
+                    checkins.append(r)
+
+        checkins.sort(key=lambda r: r.start_date)
+
+        lines.append(short)
+        if not checkins:
+            lines.append("  (check-in yok)")
+        else:
+            for c in checkins:
+                pax = f"  {c.lead_passenger}" if c.lead_passenger else ""
+                lines.append(f"  {c.start_date.strftime('%d/%m/%y')}{pax}")
+        lines.append("")
+
+    return "\n".join(lines)

@@ -418,6 +418,46 @@ body {
 .btn.danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
 .btn.danger:hover { background: rgba(248,113,113,0.1); }
 .btn.small { padding: 5px 10px; font-size: 0.7rem; }
+.btn.warning-btn { background: transparent; color: #fbbf24; border: 1px solid #fbbf24; position: relative; }
+.btn.warning-btn:hover { background: rgba(251,191,36,0.1); }
+.warnings-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  background: #f43f5e; color: #fff; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 700;
+}
+.warnings-meta { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 14px; }
+.warning-section { margin-bottom: 18px; }
+.warning-section h4 {
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+}
+.warning-section h4 .count-chip {
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 1px 8px; border-radius: 999px; font-size: 0.7rem;
+}
+.warning-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px;
+  font-size: 0.82rem;
+}
+.warning-card .wc-villa { font-weight: 700; color: var(--text); }
+.warning-card .wc-dates { color: var(--accent); font-variant-numeric: tabular-nums; }
+.warning-card .wc-passenger { color: var(--text-dim); }
+.warning-card .wc-sub { color: var(--text-dim); font-size: 0.72rem; margin-top: 2px; }
+.warning-empty { color: var(--text-dim); text-align: center; padding: 16px; font-size: 0.8rem; }
+.report-date-controls {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0 8px 0; margin: -4px 0 4px 0;
+  font-size: 0.8rem; color: var(--text-dim);
+}
+.report-date-controls input[type="date"], .report-date-controls input[type="number"] {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  padding: 6px 8px; font-size: 0.78rem; font-family: var(--font);
+  outline: none;
+}
+.report-date-controls input:focus { border-color: var(--accent); }
 
 /* ── Calendar Range Selection ──────────────────────────────────── */
 .calendar-grid td.range-start {
@@ -613,6 +653,9 @@ body {
       <button class="btn secondary" onclick="openReportsModal()">
         📋 Reports
       </button>
+      <button class="btn warning-btn" onclick="openWarningsModal()">
+        ⚠ Uyarılar <span class="warnings-badge" id="warningsBadge" style="display:none"></span>
+      </button>
     </div>
 
     <!-- Reports Modal -->
@@ -640,14 +683,60 @@ body {
               <span class="report-icon">📊</span>
               <div><strong>Total History Report</strong><br><small>All-time reservations (.xlsx)</small></div>
             </a>
-            <a class="report-link" href="/api/reports/gaps" target="_blank">
+            <a class="report-link" href="/api/reports/gaps" target="_blank" id="gapsLink">
               <span class="report-icon">📆</span>
               <div><strong>Available Gaps Report</strong><br><small>Free intervals per villa (text)</small></div>
             </a>
+            <div class="report-date-controls">
+              <input type="date" id="gapsStart" title="Start date">
+              <span>→</span>
+              <input type="date" id="gapsEnd" title="End date">
+              <button class="btn primary small" onclick="downloadGaps()">İndir</button>
+            </div>
+            <a class="report-link" href="/api/reports/new-reservations" target="_blank" id="newResLink">
+              <span class="report-icon">🆕</span>
+              <div><strong>New Reservations</strong><br><small>Diff between last two snapshots (text)</small></div>
+            </a>
+            <div class="report-date-controls">
+              <input type="date" id="newResFrom" title="From date">
+              <span>→</span>
+              <input type="date" id="newResTo" title="To date">
+              <button class="btn primary small" onclick="downloadNewRes()">İndir</button>
+            </div>
+            <a class="report-link" href="/api/reports/korsan-checkins" target="_blank" id="korsanCheckinsLink">
+              <span class="report-icon">🧾</span>
+              <div><strong>Korsan Check-ins</strong><br><small>Upcoming arrivals per villa (text)</small></div>
+            </a>
+            <div class="report-date-controls">
+              <input type="date" id="korsanFrom" title="From date (default: yesterday)">
+              <span>+</span>
+              <input type="number" id="korsanDays" value="10" min="1" max="90" title="Days forward" style="width:64px">
+              <span>gün</span>
+              <button class="btn primary small" onclick="downloadKorsanCheckins()">İndir</button>
+            </div>
             <a class="report-link" href="/api/reports/korsan" target="_blank">
               <span class="report-icon">🗓</span>
               <div><strong>Korsan Villas Calendar</strong><br><small>Calendar workbook (.xlsx)</small></div>
             </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warnings Modal -->
+    <div class="modal-overlay" id="warningsModal" style="display:none" onclick="if(event.target===this)closeWarningsModal()">
+      <div class="modal-card modal-wide">
+        <div class="modal-header">
+          <h3>⚠ Uyarılar — Değişiklik Analizi</h3>
+          <button class="modal-close" onclick="closeWarningsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="warnings-meta" id="warningsMeta"></div>
+          <div id="warningsContent" style="min-height:120px">
+            <div style="color:var(--text-dim);text-align:center;padding:24px">Hesaplanıyor…</div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn primary small" onclick="loadWarnings()">🔄 Yeniden Hesapla</button>
           </div>
         </div>
       </div>
@@ -804,6 +893,7 @@ async function init() {
   await loadVillas();
   await loadStats();
   await loadTags();
+  refreshWarningsBadge();
   populateModalVillaDropdown();
   document.getElementById('searchForm').addEventListener('submit', handleSearch);
   // Set default dates
@@ -1605,6 +1695,159 @@ function closeReportsModal() {
   document.body.style.overflow = '';
 }
 
+function isoToDmy(iso) {
+  if (!iso) return '';
+  const parts = iso.split('-');
+  return `${parts[2]}/${parts[1]}/${parts[0].slice(2)}`;
+}
+
+function downloadGaps() {
+  const s = document.getElementById('gapsStart').value;
+  const e = document.getElementById('gapsEnd').value;
+  const params = new URLSearchParams();
+  if (s) params.set('start', s);
+  if (e) params.set('end', e);
+  const q = params.toString();
+  window.open('/api/reports/gaps' + (q ? '?' + q : ''), '_blank');
+}
+
+function downloadNewRes() {
+  const f = document.getElementById('newResFrom').value;
+  const t = document.getElementById('newResTo').value;
+  const params = new URLSearchParams();
+  if (f) params.set('date_from', isoToDmy(f));
+  if (t) params.set('date_to', isoToDmy(t));
+  const q = params.toString();
+  window.open('/api/reports/new-reservations' + (q ? '?' + q : ''), '_blank');
+}
+
+function downloadKorsanCheckins() {
+  const f = document.getElementById('korsanFrom').value;
+  const d = document.getElementById('korsanDays').value || '10';
+  const params = new URLSearchParams();
+  if (f) params.set('from', f);
+  params.set('days', d);
+  window.open('/api/reports/korsan-checkins?' + params.toString(), '_blank');
+}
+
+// ── Warnings Modal (Change Detection) ─────────────────────────
+
+function openWarningsModal() {
+  document.getElementById('warningsModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  loadWarnings();  // recalculate fresh each open
+}
+
+function closeWarningsModal() {
+  document.getElementById('warningsModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+async function loadWarnings() {
+  const content = document.getElementById('warningsContent');
+  const meta = document.getElementById('warningsMeta');
+  content.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:24px">Hesaplanıyor…</div>';
+  meta.textContent = '';
+  try {
+    const res = await fetch('/api/reports/changes');
+    const data = await res.json();
+    if (data.error) {
+      content.innerHTML = `<div class="warning-empty">${data.error}</div>`;
+      return;
+    }
+    renderWarnings(data);
+    updateWarningsBadge(data.summary);
+  } catch(e) {
+    content.innerHTML = '<div class="warning-empty">Yüklenemedi. Lütfen tekrar deneyin.</div>';
+  }
+}
+
+function renderWarnings(data) {
+  const content = document.getElementById('warningsContent');
+  const meta = document.getElementById('warningsMeta');
+  const s = data.summary;
+
+  meta.textContent = `Hedef: ${data.target_file} · Snapshot tarihi: ${data.target_date || '?'} · ` +
+    `Baseline: ${data.baseline_snapshot_count} snapshot + ${data.manual_count} manuel`;
+
+  let html = '';
+
+  // New
+  html += `<div class="warning-section">
+    <h4>🆕 Yeni Rezervasyonlar <span class="count-chip">${s.new_count}</span></h4>`;
+  if (data.new.length === 0) {
+    html += '<div class="warning-empty">Yeni rezervasyon yok.</div>';
+  } else {
+    for (const r of data.new) {
+      html += `<div class="warning-card">
+        <span class="wc-villa">${escHtml(r.villa)}</span> ·
+        <span class="wc-dates">${r.start} - ${r.end}</span>
+        ${r.passenger ? `<div class="wc-passenger">👤 ${escHtml(r.passenger)}</div>` : ''}
+      </div>`;
+    }
+  }
+  html += '</div>';
+
+  // Deleted
+  html += `<div class="warning-section">
+    <h4>❌ Silinmiş Olabilecek Rezervasyonlar <span class="count-chip">${s.deleted_count}</span></h4>`;
+  if (data.deleted.length === 0) {
+    html += '<div class="warning-empty">Silinmiş rezervasyon tespit edilmedi.</div>';
+  } else {
+    for (const r of data.deleted) {
+      html += `<div class="warning-card">
+        <span class="wc-villa">${escHtml(r.villa)}</span> ·
+        <span class="wc-dates">${r.start} - ${r.end}</span>
+        ${r.passenger ? `<div class="wc-passenger">👤 ${escHtml(r.passenger)}</div>` : ''}
+        <div class="wc-sub">Son görüldü: ${escHtml(r.last_seen_in || '?')}</div>
+      </div>`;
+    }
+  }
+  html += '</div>';
+
+  // Conflicts
+  html += `<div class="warning-section">
+    <h4>⚠ Çakışan Rezervasyonlar <span class="count-chip">${s.conflict_count}</span></h4>`;
+  if (data.conflicts.length === 0) {
+    html += '<div class="warning-empty">Çakışma tespit edilmedi.</div>';
+  } else {
+    for (const r of data.conflicts) {
+      html += `<div class="warning-card">
+        <span class="wc-villa">${escHtml(r.villa)}</span> ·
+        <span class="wc-dates">${r.range1}</span> ile <span class="wc-dates">${r.range2}</span> çakışıyor
+      </div>`;
+    }
+  }
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+function updateWarningsBadge(summary) {
+  const total = (summary.new_count || 0) + (summary.deleted_count || 0) + (summary.conflict_count || 0);
+  const badge = document.getElementById('warningsBadge');
+  if (total > 0) {
+    badge.textContent = total;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function refreshWarningsBadge() {
+  try {
+    const res = await fetch('/api/reports/changes-summary');
+    const data = await res.json();
+    if (data && !data.error) updateWarningsBadge(data);
+  } catch(e) { /* ignore */ }
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 async function loadAndRenderManagerCards() {
   try {
     const res = await fetch('/api/manual-reservations');
@@ -1714,6 +1957,15 @@ async function handleFileUpload(input) {
       await loadVillas();
       await loadStats();
       if (state.currentVilla) loadCalendar();
+      // Auto-trigger change detection warnings
+      const summary = await fetch('/api/reports/changes-summary').then(r => r.json()).catch(() => null);
+      if (summary && !summary.error) {
+        updateWarningsBadge(summary);
+        const total = (summary.new_count || 0) + (summary.deleted_count || 0) + (summary.conflict_count || 0);
+        if (total > 0) {
+          openWarningsModal();
+        }
+      }
     } else {
       status.textContent = 'Error: ' + (data.message || 'Upload failed');
       status.className = 'upload-status error';

@@ -599,6 +599,27 @@ def api_korsan_report():
                     headers={"Content-Disposition": "attachment; filename=korsan_villas.xlsx"})
 
 
+@app.get("/api/reports/korsan-checkins")
+def api_korsan_checkins(
+    from_: str = Query(None, description="Window start (YYYY-MM-DD, default: today-1)"),
+    days: int = Query(10, ge=1, description="Number of days forward"),
+):
+    """List upcoming check-ins for each Korsan villa in a rolling window."""
+    _ensure_loaded()
+    from villa_matcher.reports.generator import korsan_checkins_report
+
+    kv_json = os.path.join(_get_data_dir(), "korsan_villas.json")
+    if not os.path.exists(kv_json):
+        kv_json = "/home/yusuf/Masaüstü/Resital Villa Scripts/inputs/korsan_villas.json"
+
+    from datetime import date as _date, timedelta as _td
+    start = _date.fromisoformat(from_) if from_ else (_date.today() - _td(days=1))
+
+    report = korsan_checkins_report(kv_json, _timelines, from_date=start, days=days)
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(report, media_type="text/plain; charset=utf-8")
+
+
 @app.get("/api/reports/total")
 def api_total_report():
     """Generate and download the total history report."""
@@ -676,6 +697,65 @@ def api_gaps_report(
                    media_type="text/plain; charset=utf-8")
 
     return PTR("\n".join(lines), media_type="text/plain; charset=utf-8")
+
+
+@app.get("/api/reports/new-reservations")
+def api_new_reservations_report(
+    newer: str = Query(None, description="Path to target snapshot .xlsx (default: latest)"),
+    date_from: str = Query(None, description="Filter start date (dd/mm/yy)"),
+    date_to: str = Query(None, description="Filter end date (dd/mm/yy)"),
+):
+    """Find reservations new in the latest (or specified) snapshot.
+
+    Baseline = all previous snapshots + manual reservations combined.
+    New = reservations whose Opportunity Name is not in the baseline.
+    """
+    from villa_matcher.reports.generator import new_reservations_report
+
+    snap_dir = _get_snapshots_dir()
+    report = new_reservations_report(
+        snap_dir,
+        newer_path=newer,
+        manual_reservations_path=_manual_reservations_json,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(report, media_type="text/plain; charset=utf-8")
+
+
+@app.get("/api/reports/changes")
+def api_change_detection(
+    target: str = Query(None, description="Target snapshot path (default: latest)"),
+):
+    """Detect new, deleted, and conflicting reservations vs the full baseline."""
+    from villa_matcher.reports.generator import change_detection_report
+
+    snap_dir = _get_snapshots_dir()
+    result = change_detection_report(
+        snap_dir,
+        target_path=target,
+        manual_reservations_path=_manual_reservations_json,
+    )
+    return result
+
+
+@app.get("/api/reports/changes-summary")
+def api_change_detection_summary(
+    target: str = Query(None, description="Target snapshot path (default: latest)"),
+):
+    """Lightweight summary of change detection counts (for the badge)."""
+    from villa_matcher.reports.generator import change_detection_report
+
+    snap_dir = _get_snapshots_dir()
+    result = change_detection_report(
+        snap_dir,
+        target_path=target,
+        manual_reservations_path=_manual_reservations_json,
+    )
+    if "error" in result:
+        return result
+    return result["summary"]
 
 
 @app.post("/api/rebuild")
