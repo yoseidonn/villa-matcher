@@ -852,6 +852,32 @@ def get_manual_reservations():
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+def _find_booking_conflicts(villa: str, start: date, end: date, exclude=None) -> list[dict]:
+    """Find blocking records (confirmed/likely_active) overlapping a date range.
+
+    Uses the merged occupancy timeline so records whose check-in has already
+    passed (dropped from the latest Excel snapshot but retained as likely_active
+    by the multi-snapshot classifier) are still detected.
+    """
+    _ensure_loaded()
+    timeline = _timelines.get(villa)
+    if not timeline:
+        return []
+    conflicts = []
+    for rec in timeline.records:
+        if not rec.is_blocking or not rec.overlaps(start, end):
+            continue
+        if exclude and (rec.start_date, rec.end_date) == exclude:
+            continue  # skip the record being edited itself
+        conflicts.append({
+            "start": rec.start_date.isoformat(),
+            "end": rec.end_date.isoformat(),
+            "passenger": rec.lead_passenger or "",
+            "confidence": rec.confidence,
+        })
+    return conflicts
+
+
 @app.post("/api/manual-reservations")
 def add_manual_reservation(
     villa: str = Query(..., description="Villa name"),
@@ -860,6 +886,7 @@ def add_manual_reservation(
     passenger: str = Query("", description="Lead passenger name"),
     extras: str = Query("", description="Extras (comma-separated)"),
     notes: str = Query("", description="Free-text notes"),
+    force: bool = Query(False, description="Override overlap conflicts"),
 ):
     """Add a new manual reservation and rebuild timelines."""
     global _timelines, _snapshot_dates, _manual_records
@@ -879,6 +906,15 @@ def add_manual_reservation(
     _ensure_loaded()
     if _registry and villa not in _registry:
         return JSONResponse({"error": f"Villa '{villa}' not found in registry."}, status_code=404)
+
+    # Detect overlaps with existing bookings (confirmed/likely_active)
+    conflicts = _find_booking_conflicts(villa, ci, co)
+    if conflicts and not force:
+        return JSONResponse(
+            {"status": "conflict", "conflicts": conflicts,
+             "message": "Overlaps existing booking(s)."},
+            status_code=409,
+        )
 
     # Append to JSON file
     try:
@@ -906,7 +942,7 @@ def add_manual_reservation(
     except Exception:
         pass
 
-    return {"status": "ok", "entry": entry, "total": len(existing)}
+    return {"status": "ok", "entry": entry, "total": len(existing), "conflicts": conflicts}
 
 
 @app.delete("/api/manual-reservations/{index}")
@@ -946,6 +982,7 @@ def update_manual_reservation(
     passenger: str = Query("", description="Lead passenger name"),
     extras: str = Query("", description="Extras (comma-separated)"),
     notes: str = Query("", description="Free-text notes"),
+    force: bool = Query(False, description="Override overlap conflicts"),
 ):
     """Update an existing manual reservation by index and rebuild timelines."""
     global _timelines, _snapshot_dates, _manual_records
@@ -968,6 +1005,25 @@ def update_manual_reservation(
     if index < 0 or index >= len(existing):
         return JSONResponse({"error": f"Index {index} out of range (0—{len(existing)-1})."}, status_code=404)
 
+    # Exclude the record being edited from the conflict check (its old date range)
+    old = existing[index]
+    exclude = None
+    try:
+        exclude = (
+            date_type.fromisoformat(old["start"]),
+            date_type.fromisoformat(old["end"]),
+        )
+    except (KeyError, ValueError):
+        pass
+
+    conflicts = _find_booking_conflicts(villa, ci, co, exclude=exclude)
+    if conflicts and not force:
+        return JSONResponse(
+            {"status": "conflict", "conflicts": conflicts,
+             "message": "Overlaps existing booking(s)."},
+            status_code=409,
+        )
+
     existing[index] = {
         "villa": villa,
         "start": start,
@@ -986,7 +1042,7 @@ def update_manual_reservation(
     except Exception:
         pass
 
-    return {"status": "ok", "entry": existing[index], "total": len(existing)}
+    return {"status": "ok", "entry": existing[index], "total": len(existing), "conflicts": conflicts}
 
 
 # ── Static frontend ──────────────────────────────────────────────────────────

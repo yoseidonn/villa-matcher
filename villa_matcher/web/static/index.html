@@ -503,6 +503,15 @@ body {
 .reservation-card .rc-notes { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; font-style: italic; }
 .reservation-card .rc-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
+/* ── Conflict Box ──────────────────────────────────────────────── */
+.conflict-box {
+  margin: 12px 0; padding: 12px 14px; border: 1px solid var(--red);
+  border-radius: var(--radius); background: rgba(248,113,113,0.1);
+  font-size: 0.75rem; color: var(--red);
+}
+.conflict-box ul { margin: 6px 0 0 16px; }
+.conflict-box li { margin: 3px 0; }
+
 /* ── Report Links ──────────────────────────────────────────────── */
 .report-links { display: flex; flex-direction: column; gap: 6px; }
 .report-link {
@@ -847,8 +856,10 @@ body {
         <label>Notes</label>
         <textarea id="modalNotes" rows="2" placeholder="Optional notes..."></textarea>
       </div>
+      <div class="conflict-box" id="conflictBox" style="display:none"></div>
       <div class="modal-actions">
         <button class="btn secondary" onclick="closeReservationModal()">Cancel</button>
+        <button class="btn danger" id="forceSaveBtn" style="display:none" onclick="submitReservationFromModal(true)">⚠ Override & Save</button>
         <button class="btn primary" onclick="submitReservationFromModal()">Save Reservation</button>
       </div>
       <div class="modal-status" id="modalStatus"></div>
@@ -1604,6 +1615,7 @@ function openReservationModal(villa, startDate, endDate) {
   document.getElementById('modalStatus').textContent = '';
   document.getElementById('reservationModalTitle').textContent = '📝 New Manual Reservation';
   state.editingIndex = null;
+  hideConflictBox();
   document.getElementById('reservationModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   setTimeout(() => document.getElementById('modalPassenger').focus(), 250);
@@ -1619,6 +1631,7 @@ function openReservationModalFromManager() {
   document.getElementById('modalStatus').textContent = '';
   document.getElementById('reservationModalTitle').textContent = '📝 New Manual Reservation';
   state.editingIndex = null;
+  hideConflictBox();
   document.getElementById('reservationModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   setTimeout(() => document.getElementById('modalPassenger').focus(), 250);
@@ -1631,7 +1644,7 @@ function closeReservationModal() {
   state.editingIndex = null;
 }
 
-async function submitReservationFromModal() {
+async function submitReservationFromModal(force = false) {
   const villa = document.getElementById('modalVilla').value;
   const start = document.getElementById('modalStart').value;
   const end = document.getElementById('modalEnd').value;
@@ -1647,6 +1660,7 @@ async function submitReservationFromModal() {
   }
 
   const params = new URLSearchParams({ villa, start, end, passenger, extras, notes });
+  if (force) params.set('force', 'true');
   const method = state.editingIndex !== null ? 'PUT' : 'POST';
   const url = state.editingIndex !== null
     ? `/api/manual-reservations/${state.editingIndex}?${params}`
@@ -1654,12 +1668,21 @@ async function submitReservationFromModal() {
 
   try {
     const res = await fetch(url, { method });
+    if (res.status === 409) {
+      const err = await res.json();
+      const conflicts = err.conflicts || [];
+      renderConflictBox(conflicts);
+      status.textContent = '⚠ Overlaps existing booking(s). Review below or override.';
+      status.style.color = 'var(--red)';
+      return;
+    }
     if (!res.ok) {
       const err = await res.json();
       status.textContent = '⚠ ' + (err.error || 'Unknown error');
       status.style.color = 'var(--red)';
       return;
     }
+    hideConflictBox();
     status.textContent = state.editingIndex !== null ? '✓ Updated — timelines rebuilt' : '✓ Added — timelines rebuilt';
     status.style.color = 'var(--green)';
     await loadVillas();
@@ -1670,6 +1693,26 @@ async function submitReservationFromModal() {
     status.textContent = '⚠ Network error. Please try again.';
     status.style.color = 'var(--red)';
   }
+}
+
+function renderConflictBox(conflicts) {
+  const box = document.getElementById('conflictBox');
+  const btn = document.getElementById('forceSaveBtn');
+  if (!conflicts.length) { hideConflictBox(); return; }
+  const items = conflicts.map(c => {
+    const pax = c.passenger ? ` — ${c.passenger}` : '';
+    const conf = c.confidence === 'likely_active' ? ' (guest currently in villa)' : '';
+    return `<li>${formatDate(c.start)} → ${formatDate(c.end)}${pax}${conf}</li>`;
+  }).join('');
+  box.innerHTML = `<strong>⚠ Overlap detected:</strong><ul>${items}</ul>`;
+  box.style.display = 'block';
+  btn.style.display = 'inline-flex';
+}
+
+function hideConflictBox() {
+  document.getElementById('conflictBox').style.display = 'none';
+  document.getElementById('conflictBox').innerHTML = '';
+  document.getElementById('forceSaveBtn').style.display = 'none';
 }
 
 // ── Manual Reservation Manager ─────────────────────────────────
@@ -1899,6 +1942,7 @@ function startEditReservation(index) {
   document.getElementById('modalStatus').textContent = '';
   document.getElementById('reservationModalTitle').textContent = '📝 Edit Manual Reservation';
   state.editingIndex = index;
+  hideConflictBox();
   document.getElementById('reservationModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
