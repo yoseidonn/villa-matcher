@@ -112,6 +112,19 @@ def _parse_date_dmy(date_str: str) -> datetime | None:
         return None
 
 
+def _is_past_reservation(res: dict, today: date) -> bool:
+    """Return True if a reservation has already checked out (end date < today).
+
+    Keeps current stays (check-out today or later) and upcoming stays.
+    Reservations with an unparseable end date are kept (not silently dropped).
+    """
+    end_str = res.get("Holiday End Date", "")
+    end = _parse_date_dmy(end_str)
+    if end is None:
+        return False
+    return end.date() < today
+
+
 def _to_date(val) -> datetime | None:
     """Coerce a value (Timestamp, datetime, or dd/mm/yy string) to a datetime."""
     if val is None:
@@ -280,6 +293,15 @@ def weekly_report(
     overlap_result = _find_overlaps(reservations)
     reservations = overlap_result["clean_reservations"]
     overlap_warnings = overlap_result["warnings"]
+
+    # Filter out past reservations: only show stays whose check-out is
+    # today or later (current stays + upcoming). A stay that already
+    # checked out is irrelevant to a caretaker's upcoming-week report.
+    today = date.today()
+    reservations = [
+        r for r in reservations
+        if not _is_past_reservation(r, today)
+    ]
 
     reservations = sorted(
         reservations,
