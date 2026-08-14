@@ -372,25 +372,62 @@ def weekly_report(
 # ── İsmet Abi Report ────────────────────────────────────────────────────────
 
 def ismet_abi_report(folder: str = "inputs/all_reservations") -> pd.DataFrame:
-    """Reservations with Welcome Pack and/or Pool Heating extras."""
+    """Reservations with Welcome Pack and/or Pool Heating extras.
+
+    Merges ALL snapshots chronologically and excludes reservations that were
+    deleted — i.e. present in an earlier snapshot but gone from the latest.
+    Deletions are detected with n-1 pairwise comparisons between consecutive
+    snapshots (snapshot[t] vs snapshot[t+1] for t = 0 .. n-2).
+    """
     files = list_files_with_extension(".xlsx", folder)
-    all_res = []
-    for file in files:
-        all_res.append(pd.read_excel(file))
-    if not all_res:
+    if not files:
         return pd.DataFrame()
-    merged = pd.concat(all_res, ignore_index=True)
 
-    if "Opportunity Name" in merged.columns:
-        def _has_relevant_extras(extras):
-            if pd.isna(extras):
-                return False
-            return "Welcome Pack" in str(extras) or "Pool Heating" in str(extras)
+    # Sort snapshots chronologically by the DD-MM-YYYY date embedded in filename
+    files = sorted(
+        files,
+        key=lambda f: _extract_snapshot_date(os.path.basename(f)) or date.min,
+    )
 
-        merged["__has"] = merged["ExtrasAggregated"].apply(_has_relevant_extras)
-        merged = merged.sort_values(by=["Opportunity Name", "__has"], ascending=[True, False])
-        merged = merged.drop_duplicates(subset=["Opportunity Name"], keep="first")
-        merged = merged.drop(columns=["__has"])
+    # Read every snapshot; keep only those carrying an Opportunity Name column
+    snapshots: list[pd.DataFrame] = []
+    for f in files:
+        df = pd.read_excel(f)
+        if "Opportunity Name" in df.columns:
+            snapshots.append(df)
+    if not snapshots:
+        return pd.DataFrame()
+
+    n = len(snapshots)
+
+    # n-1 pairwise comparisons: a reservation that disappears between
+    # snapshot[t] and snapshot[t+1] is a deletion candidate.
+    disappeared: set[str] = set()
+    for t in range(n - 1):
+        cur = set(snapshots[t]["Opportunity Name"].dropna().astype(str))
+        nxt = set(snapshots[t + 1]["Opportunity Name"].dropna().astype(str))
+        disappeared.update(cur - nxt)
+
+    # A reservation that reappears later is NOT deleted — only exclude those
+    # also absent from the latest snapshot.
+    latest = set(snapshots[-1]["Opportunity Name"].dropna().astype(str))
+    deleted = disappeared - latest
+
+    merged = pd.concat(snapshots, ignore_index=True)
+
+    # Exclude deleted reservations
+    if deleted:
+        merged = merged[~merged["Opportunity Name"].astype(str).isin(deleted)]
+
+    def _has_relevant_extras(extras):
+        if pd.isna(extras):
+            return False
+        return "Welcome Pack" in str(extras) or "Pool Heating" in str(extras)
+
+    merged["__has"] = merged["ExtrasAggregated"].apply(_has_relevant_extras)
+    merged = merged.sort_values(by=["Opportunity Name", "__has"], ascending=[True, False])
+    merged = merged.drop_duplicates(subset=["Opportunity Name"], keep="first")
+    merged = merged.drop(columns=["__has"])
 
     if "ExtrasAggregated" in merged.columns:
         merged["ExtrasAggregated"] = merged["ExtrasAggregated"].apply(_filter_extras_text)
