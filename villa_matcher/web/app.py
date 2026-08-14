@@ -527,9 +527,9 @@ def api_weekly_report():
     """Generate and download the weekly caretaker report."""
     _ensure_loaded()
     from villa_matcher.reports.generator import weekly_report
-    from villa_matcher.reports.file_utils import select_first_file_with_extension
+    from villa_matcher.reports.file_utils import select_latest_file_with_extension
 
-    excel = select_first_file_with_extension(".xlsx", _snapshots_dir)
+    excel = select_latest_file_with_extension(".xlsx", _snapshots_dir)
     if not excel:
         return JSONResponse({"error": "No Excel file found"}, status_code=404)
     ct_path = os.path.join(os.path.dirname(_villas_json), "caretakers.json")
@@ -568,7 +568,7 @@ def api_ismet_report():
 def api_hamdi_report():
     """Generate and download the Hamdi Abi report (unassigned villas)."""
     from villa_matcher.reports.generator import hamdi_abi_report
-    inputs = os.path.dirname(_snapshots_dir)
+    inputs = _snapshots_dir
     ct = os.path.join(os.path.dirname(_villas_json), "caretakers.json")
     if not os.path.exists(ct):
         ct = "/home/yusuf/Masaüstü/Resital Villa Scripts/inputs/caretakers.json"
@@ -581,9 +581,9 @@ def api_hamdi_report():
 def api_korsan_report():
     """Generate and download the Korsan Villas calendar Excel workbook."""
     from villa_matcher.reports.generator import korsan_villas_report
-    from villa_matcher.reports.file_utils import select_first_file_with_extension
+    from villa_matcher.reports.file_utils import select_latest_file_with_extension
 
-    excel = select_first_file_with_extension(".xlsx", _snapshots_dir)
+    excel = select_latest_file_with_extension(".xlsx", _snapshots_dir)
     data_dir = _get_data_dir()
     kv_json = os.path.join(data_dir, "korsan_villas.json")
     template = os.path.join(data_dir, "Korsan-Villas-Template.xlsx")

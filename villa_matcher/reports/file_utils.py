@@ -1,7 +1,8 @@
 """File utilities — ported from utils/file.py."""
 
 import os
-from datetime import datetime
+import re
+from datetime import date, datetime
 
 import openpyxl
 from pandas import DataFrame
@@ -22,6 +23,28 @@ def list_files_with_extension(extension: str, folder: str) -> list[str]:
             if fname.lower().endswith(extension.lower()):
                 files.append(os.path.join(folder, fname))
     return files
+
+
+def select_latest_file_with_extension(extension: str, folder: str) -> str | None:
+    """Return the chronologically latest file, by DD-MM-YYYY date embedded in
+    the filename (e.g. 'Resort Report ..._03-08-2026_unlocked.xlsx').
+
+    Falls back to `select_first_file_with_extension` if no date can be parsed.
+    """
+    files = list_files_with_extension(extension, folder)
+    if not files:
+        return None
+
+    def _key(f: str) -> date:
+        m = re.search(r"(\d{2})[-_.](\d{2})[-_.](\d{4})", os.path.basename(f))
+        if m:
+            try:
+                return date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+            except ValueError:
+                pass
+        return date.min
+
+    return max(files, key=_key)
 
 
 def save_report_to_bytes(report, prefix: str = "report") -> tuple[bytes, str, str]:

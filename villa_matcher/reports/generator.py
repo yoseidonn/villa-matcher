@@ -19,7 +19,10 @@ import pandas as pd
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 from villa_matcher.reports.caretakers import get_caretakers
-from villa_matcher.reports.file_utils import list_files_with_extension
+from villa_matcher.reports.file_utils import (
+    list_files_with_extension,
+    select_latest_file_with_extension,
+)
 from villa_matcher.reports.reservations import (
     categorise_by_villas,
     extract_reservations,
@@ -411,7 +414,9 @@ def hamdi_abi_report(inputs_folder: str = "inputs", caretakers_path: str = "inpu
     if not files:
         return "Excel dosyası bulunamadı"
 
-    df = pd.read_excel(files[0])
+    # Use the latest snapshot (by filename date), not an arbitrary first file
+    latest = select_latest_file_with_extension(".xlsx", inputs_folder) or files[0]
+    df = pd.read_excel(latest)
     assigned = set()
     caretakers = get_caretakers(caretakers_path)
     for ct in caretakers:
@@ -432,7 +437,7 @@ def hamdi_abi_report(inputs_folder: str = "inputs", caretakers_path: str = "inpu
     _format_date_columns(hamdi, DATE_COLS)
 
     output = "---- Hamdi Abi ----\n"
-    output += f"Kullanılan dosya: {os.path.basename(files[0])}\n\n"
+    output += f"Kullanılan dosya: {os.path.basename(latest)}\n\n"
 
     if len(hamdi) == 0:
         output += "Rezervasyon yok"
